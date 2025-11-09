@@ -1,0 +1,38 @@
+const tg = window.Telegram.WebApp;
+const userId = tg.initDataUnsafe.user.id;
+
+// ЗАМЕНИ НА СВОИ URL ИЗ n8n
+const GET_URL = "https://n8n---bots-ursobarbudos.amvera.io/webhook/profile/get";
+const SAVE_URL = "https://n8n---bots-ursobarbudos.amvera.io/webhook/profile/save";
+
+// 1. При загрузке страницы, получаем данные профиля
+document.addEventListener('DOMContentLoaded', function() {
+    fetch(`${GET_URL}?chat_id=${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Заполняем поля формы данными из Airtable
+            document.getElementById('phone').value = data['Контактный телефон'] || '';
+            document.getElementById('payment').value = data['Платежные реквизиты'] || '';
+            // ... и т.д. для всех полей
+        });
+});
+
+// 2. При нажатии на главную кнопку, сохраняем данные
+tg.MainButton.setText('Сохранить изменения');
+tg.MainButton.show();
+tg.onEvent('mainButtonClicked', function() {
+    const dataToSave = {
+        chat_id: userId,
+        phone: document.getElementById('phone').value,
+        paymentDetails: document.getElementById('payment').value,
+        // ... и т.д. для всех полей
+    };
+
+    fetch(SAVE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataToSave)
+    }).then(() => {
+        tg.close(); // Закрываем Web App после сохранения
+    });
+});
