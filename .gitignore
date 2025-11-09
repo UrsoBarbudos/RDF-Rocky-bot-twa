@@ -10,3 +10,7 @@
 # Logs
 *.log
 npm-debug.log*
+
+# Secrets
+profile/config.js
+**/config.js

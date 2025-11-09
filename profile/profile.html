@@ -5,6 +5,163 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль пользователя</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="config.js"></script>
+    <script>
+        // --- НАСТРОЙКИ AIRTABLE (подгружаются из config.js) ---
+        const AIRTABLE_TOKEN = AIRTABLE_CONFIG.TOKEN;
+        const BASE_ID = AIRTABLE_CONFIG.BASE_ID;
+        const TABLE_NAME = AIRTABLE_CONFIG.TABLE_NAME;
+
+        const tg = window.Telegram.WebApp;
+        const form = document.getElementById('profile-form');
+        const loader = document.getElementById('loader');
+        const errorContainer = document.getElementById('error-message');
+        const userIdElement = document.getElementById('user-id');
+        const usernameElement = document.getElementById('username');
+
+        // --- UI ФУНКЦИИ ---
+        function showLoader(show) {
+            loader.style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            if (message) {
+                errorContainer.textContent = message;
+                errorContainer.style.display = 'block';
+            } else {
+                errorContainer.style.display = 'none';
+            }
+        }
+
+        // --- API ЛОГИКА ---
+        async function loadUserProfile(chatId) {
+            const formula = `{chat_id}="${chatId}"`;
+            const url = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}?filterByFormula=${encodeURIComponent(formula)}`;
+
+            try {
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` }
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                // Возвращаем первую найденную запись или пустой объект
+                return data.records[0] || {};
+            } catch (error) {
+                console.error("Error loading user profile:", error);
+                return null;
+            }
+        }
+
+        async function saveUserProfile(recordId, userData) {
+            const url = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}`;
+            let method, body;
+
+            if (recordId) {
+                // Обновляем существующую запись
+                method = 'PATCH';
+                body = JSON.stringify({
+                    records: [{
+                        id: recordId,
+                        fields: userData
+                    }]
+                });
+            } else {
+                // Создаем новую запись
+                method = 'POST';
+                body = JSON.stringify({
+                    records: [{
+                        fields: userData
+                    }]
+                });
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: body
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error("Error saving user profile:", error);
+                return null;
+            }
+        }
+
+        // --- ЛОГИКА СТРАНИЦЫ ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            tg.ready();
+            tg.expand();
+
+            const user = tg.initDataUnsafe.user;
+            if (user) {
+                userIdElement.textContent = `ID: ${user.id}`;
+                usernameElement.textContent = `Username: ${user.username || 'not available'}`;
+            }
+
+            tg.MainButton.setText('Сохранить изменения');
+            tg.MainButton.show();
+
+            showLoader(true);
+            showError(null);
+
+            try {
+                const userProfileData = await loadUserProfile(user.id);
+
+                if (userProfileData) {
+                    // Сохраняем ID записи для будущего обновления
+                    form.dataset.recordId = userProfileData.id || '';
+
+                    document.getElementById('phone').value = userProfileData.fields?.['Контактный телефон'] || '';
+                    document.getElementById('paymentDetails').value = userProfileData.fields?.['Платежные реквизиты'] || '';
+                    document.getElementById('notes').value = userProfileData.fields?.['Примечание'] || '';
+                } else {
+                    throw new Error("Profile data is null");
+                }
+            } catch (error) {
+                console.error(error);
+                showError('Не удалось загрузить данные профиля. Попробуйте позже.');
+            } finally {
+                showLoader(false);
+            }
+        });
+
+        tg.MainButton.onClick(async () => {
+            if (tg.MainButton.isLoading) return;
+
+            tg.MainButton.showProgress();
+            showError(null);
+
+            const recordId = form.dataset.recordId;
+            const userData = {
+                'chat_id': String(tg.initDataUnsafe.user.id),
+                '@username': tg.initDataUnsafe.user.username,
+                'Контактный телефон': document.getElementById('phone').value,
+                'Платежные реквизиты': document.getElementById('paymentDetails').value,
+                'Примечание': document.getElementById('notes').value
+            };
+
+            try {
+                const result = await saveUserProfile(recordId, userData);
+                if (result && result.records && result.records.length > 0) {
+                    // Обновляем recordId на случай, если это была новая запись
+                    form.dataset.recordId = result.records[0].id;
+                    tg.showPopup({ message: 'Профиль успешно сохранен!' });
+                } else {
+                    throw new Error("Save operation failed or returned no records.");
+                }
+            } catch (error) {
+                console.error(error);
+                showError('Не удалось сохранить данные. Проверьте введенные значения и попробуйте снова.');
+            } finally {
+                tg.MainButton.hideProgress();
+            }
+        });
+    </script>
     <style>
         * {
             margin: 0;
@@ -134,102 +291,5 @@
             </div>
         </form>
     </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        
-        const userId = tg.initDataUnsafe?.user?.id || 'test_user';
-        const username = tg.initDataUnsafe?.user?.username || 'test_username';
-
-        // URL для API n8n
-        const GET_URL = "https://n8n---bots-ursobarbudos.amvera.io/webhook/profile/get";
-        const SAVE_URL = "https://n8n---bots-ursobarbudos.amvera.io/webhook/profile/save";
-
-        const loadingEl = document.getElementById('loading');
-        const errorEl = document.getElementById('error');
-        const formEl = document.getElementById('profileForm');
-
-        // Функция показа ошибки
-        function showError(message) {
-            errorEl.textContent = message;
-            errorEl.style.display = 'block';
-            loadingEl.style.display = 'none';
-        }
-
-        // 1. При загрузке страницы, получаем данные профиля
-        document.addEventListener('DOMContentLoaded', function() {
-            // Отображаем ID пользователя
-            document.getElementById('userId').textContent = userId;
-            document.getElementById('username').textContent = username || 'Не указан';
-
-            // Загружаем данные из Airtable
-            fetch(`${GET_URL}?chat_id=${userId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Ошибка загрузки данных');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Заполняем поля формы данными из Airtable
-                    document.getElementById('phone').value = data['Контактный телефон'] || '';
-                    document.getElementById('payment').value = data['Платежные реквизиты'] || '';
-                    document.getElementById('notes').value = data['Примечание'] || '';
-                    
-                    // Показываем форму
-                    loadingEl.style.display = 'none';
-                    formEl.style.display = 'block';
-                })
-                .catch(error => {
-                    console.error('Ошибка:', error);
-                    showError('Не удалось загрузить данные профиля. Попробуйте позже.');
-                    // Показываем пустую форму для заполнения
-                    formEl.style.display = 'block';
-                });
-        });
-
-        // 2. При нажатии на главную кнопку, сохраняем данные
-        tg.MainButton.setText('💾 Сохранить изменения');
-        tg.MainButton.show();
-        tg.MainButton.onClick(function() {
-            tg.MainButton.showProgress();
-            
-            const dataToSave = {
-                chat_id: userId,
-                username: username,
-                phone: document.getElementById('phone').value,
-                paymentDetails: document.getElementById('payment').value,
-                notes: document.getElementById('notes').value
-            };
-
-            fetch(SAVE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dataToSave)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Ошибка сохранения');
-                }
-                return response.json();
-            })
-            .then(() => {
-                tg.MainButton.hideProgress();
-                tg.showAlert('✅ Профиль успешно сохранен!', function() {
-                    tg.close();
-                });
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                tg.MainButton.hideProgress();
-                tg.showAlert('❌ Ошибка сохранения. Попробуйте еще раз.');
-            });
-        });
-
-        // Применяем тему Telegram
-        document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
-        document.body.style.color = tg.themeParams.text_color || '#000000';
-    </script>
 </body>
 </html>
