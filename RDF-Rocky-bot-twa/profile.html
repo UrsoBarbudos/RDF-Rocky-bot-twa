@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль пользователя</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 8px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #3390ec);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-top: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+
+        .error {
+            background-color: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .info-block {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-block p {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👤 Мой профиль</h1>
+        
+        <div id="error" class="error"></div>
+        <div id="loading" class="loading">Загрузка данных...</div>
+        
+        <form id="profileForm" style="display: none;">
+            <div class="info-block">
+                <p><strong>ID:</strong> <span id="userId"></span></p>
+                <p><strong>Username:</strong> <span id="username"></span></p>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">📱 Контактный телефон</label>
+                <input type="tel" id="phone" name="phone" placeholder="+7 (999) 123-45-67">
+                <div class="hint">Укажите номер телефона для связи</div>
+            </div>
+
+            <div class="form-group">
+                <label for="payment">💳 Платежные реквизиты</label>
+                <textarea id="payment" name="payment" placeholder="Номер карты, СБП или другие реквизиты"></textarea>
+                <div class="hint">Укажите реквизиты для получения оплаты</div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">📝 Примечание</label>
+                <textarea id="notes" name="notes" placeholder="Дополнительная информация"></textarea>
+                <div class="hint">Любая дополнительная информация о вас</div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        const userId = tg.initDataUnsafe?.user?.id || 'test_user';
+        const username = tg.initDataUnsafe?.user?.username || 'test_username';
+
+        // URL для API n8n
+        const GET_URL = "https://n8n---bots-ursobarbudos.amvera.io/webhook/profile/get";
+        const SAVE_URL = "https://n8n---bots-ursobarbudos.amvera.io/webhook/profile/save";
+
+        const loadingEl = document.getElementById('loading');
+        const errorEl = document.getElementById('error');
+        const formEl = document.getElementById('profileForm');
+
+        // Функция показа ошибки
+        function showError(message) {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            loadingEl.style.display = 'none';
+        }
+
+        // 1. При загрузке страницы, получаем данные профиля
+        document.addEventListener('DOMContentLoaded', function() {
+            // Отображаем ID пользователя
+            document.getElementById('userId').textContent = userId;
+            document.getElementById('username').textContent = username || 'Не указан';
+
+            // Загружаем данные из Airtable
+            fetch(`${GET_URL}?chat_id=${userId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки данных');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Заполняем поля формы данными из Airtable
+                    document.getElementById('phone').value = data['Контактный телефон'] || '';
+                    document.getElementById('payment').value = data['Платежные реквизиты'] || '';
+                    document.getElementById('notes').value = data['Примечание'] || '';
+                    
+                    // Показываем форму
+                    loadingEl.style.display = 'none';
+                    formEl.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    showError('Не удалось загрузить данные профиля. Попробуйте позже.');
+                    // Показываем пустую форму для заполнения
+                    formEl.style.display = 'block';
+                });
+        });
+
+        // 2. При нажатии на главную кнопку, сохраняем данные
+        tg.MainButton.setText('💾 Сохранить изменения');
+        tg.MainButton.show();
+        tg.MainButton.onClick(function() {
+            tg.MainButton.showProgress();
+            
+            const dataToSave = {
+                chat_id: userId,
+                username: username,
+                phone: document.getElementById('phone').value,
+                paymentDetails: document.getElementById('payment').value,
+                notes: document.getElementById('notes').value
+            };
+
+            fetch(SAVE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataToSave)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка сохранения');
+                }
+                return response.json();
+            })
+            .then(() => {
+                tg.MainButton.hideProgress();
+                tg.showAlert('✅ Профиль успешно сохранен!', function() {
+                    tg.close();
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                tg.MainButton.hideProgress();
+                tg.showAlert('❌ Ошибка сохранения. Попробуйте еще раз.');
+            });
+        });
+
+        // Применяем тему Telegram
+        document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
+        document.body.style.color = tg.themeParams.text_color || '#000000';
+    </script>
+</body>
+</html>
