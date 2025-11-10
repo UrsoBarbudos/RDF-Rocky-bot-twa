@@ -17,7 +17,8 @@
             try {
                 const response = await fetch(url, {
                     headers: {
-                        'X-Telegram-Init-Data': tg.initData
+                        'X-Telegram-Init-Data': tg.initData,
+                        'Cache-Control': 'no-cache'
                     }
                 });
                 
@@ -127,6 +128,9 @@
                 if (userProfileData && userProfileData.success && userProfileData.user) {
                     // Существующий пользователь с данными
                     const userData = userProfileData.user;
+                    
+                    // Отладочная информация
+                    console.log('API Response:', userData);
                     
                     document.getElementById('payment').value = userData.payment_info || '';
                     document.getElementById('notes').value = userData.notes || '';
