@@ -118,10 +118,14 @@
             } catch (error) {
                 console.error(error);
                 
-                // Показываем конкретное сообщение об ошибке
+                // Показываем сообщение об ошибке и скрываем форму
                 const errorMessage = error.message || 'Не удалось загрузить данные профиля. Попробуйте позже.';
                 showError(errorMessage);
-                showLoading(false);
+                
+                // Скрываем форму и кнопку при ошибке доступа
+                loadingEl.style.display = 'none';
+                form.style.display = 'none';
+                tg.MainButton.hide();
             }
         });
 

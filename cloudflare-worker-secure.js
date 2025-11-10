@@ -21,23 +21,32 @@ async function checkWhitelist(chatId, airtableToken, baseId) {
   const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(whitelistTable)}?filterByFormula=${encodeURIComponent(formula)}`;
   
   try {
+    console.log('Checking whitelist for chat_id:', chatId);
+    console.log('Whitelist URL:', url);
+    
     const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${airtableToken}` }
     });
     
     const data = await response.json();
+    console.log('Whitelist response:', JSON.stringify(data));
     
     if (!data.records || data.records.length === 0) {
+      console.log('User not found in whitelist');
       return { approved: false, reason: 'not_in_whitelist' };
     }
     
     const status = data.records[0].fields['Status'];
+    console.log('User status in whitelist:', status, 'Type:', typeof status);
     
     if (status === 'Approved') {
+      console.log('User approved!');
       return { approved: true };
     } else if (status === 'Blocked') {
+      console.log('User blocked!');
       return { approved: false, reason: 'blocked' };
     } else {
+      console.log('User pending approval. Status value:', status);
       return { approved: false, reason: 'pending_approval' };
     }
   } catch (error) {
