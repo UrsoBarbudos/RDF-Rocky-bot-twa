@@ -7,9 +7,10 @@
 Полный план реализации проекта Rocky RDF Bot с Telegram Web Apps.
 
 > 🗺️ **Документация:** 
-> - **📊 Текущий статус:** [PROJECT_STATUS.md](PROJECT_STATUS.md) 
-> - **🔧 Техническое руководство:** [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)
-> - **📖 Общий обзор:** [README.md](README.md)
+> - **� Главная документация:** [README.md](README.md) — полное описание проекта
+> - **� Настройка безопасности:** [SECURITY_SETUP.md](SECURITY_SETUP.md) — система доступа
+> - **⚡ Cloudflare Worker:** [CLOUDFLARE_SETUP.md](CLOUDFLARE_SETUP.md) — развертывание API
+> - **📦 Архивные документы:** [archive/](archive/) — исторические версии
 
 ---
 

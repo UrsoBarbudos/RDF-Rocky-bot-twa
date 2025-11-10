@@ -6,10 +6,11 @@
 
 Telegram бот с Web Apps для управления съемочной командой RDF. Полностью функциональная система с единой архитектурой данных.
 
-> 📖 **Новичок в проекте?** 
-> - 🚀 **Быстрый старт:** [PROJECT_STATUS.md](PROJECT_STATUS.md) — полный статус проекта
-> - 📋 **Детальная документация:** [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) — техническое руководство  
-> - 🎯 **API Reference:** См. раздел "API Documentation" ниже
+> 📖 **Документация проекта:** 
+> - � **План развития:** [TODO.md](TODO.md) — задачи и планы Фазы 2
+> - � **Настройка безопасности:** [SECURITY_SETUP.md](SECURITY_SETUP.md) — система доступа  
+> - ⚡ **Настройка Cloudflare:** [CLOUDFLARE_SETUP.md](CLOUDFLARE_SETUP.md) — развертывание Worker
+> - 📦 **Архивные документы:** [archive/](archive/) — исторические версии и отчеты
 
 ## 📋 Описание проекта
 
@@ -138,15 +139,73 @@ const API_URL = 'https://your-worker-name.your-subdomain.workers.dev';
 3. Заполните данные и нажмите "Сохранить изменения"
 4. Проверьте Airtable — данные должны появиться в таблице!
 
+## 🌐 API Документация
+
+### Base URL: `https://rocky-bot-api.egordkd.workers.dev`
+
+| Method | Endpoint | Описание | Статус |
+|--------|----------|----------|--------|
+| `GET` | `/api/profile?chat_id=123` | Получение профиля пользователя | ✅ |
+| `POST` | `/api/register` | Регистрация нового пользователя | ✅ |
+| `POST` | `/api/profile` | Обновление профиля | ✅ |
+| `GET` | `/api/status?chat_id=123` | Проверка статуса доступа | ✅ |
+
+### Примеры использования:
+
+**Получение профиля:**
+```javascript
+const response = await fetch('/api/profile?chat_id=182719187');
+const data = await response.json();
+// {success: true, user: {chat_id: 182719187, username: "@urso_barbudos", ...}}
+```
+
+**Регистрация пользователя:**
+```javascript
+const response = await fetch('/api/register', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        chat_id: 182719187,
+        username: 'urso_barbudos', 
+        first_name: 'Егор'
+    })
+});
+```
+
+## 📊 Статус проекта
+
+### ✅ Фаза 1: Профили пользователей (ЗАВЕРШЕНА)
+- ✅ **Система регистрации** через Web App
+- ✅ **Управление профилями** с платежными реквизитами
+- ✅ **Контроль доступа** (Pending/Approved/Blocked)
+- ✅ **Автоматизация** через n8n workflow
+- ✅ **Критические исправления** - решена проблема "Load failed"
+
+### 🚧 Фаза 2: Система вызывных листов (ГОТОВА К СТАРТУ)
+- [ ] **Callsheet Web App** для мастеров
+- [ ] **Создание заказов** через интерфейс
+- [ ] **Уведомления пользователей** о новых вызовах  
+- [ ] **Управление статусами** (Новый/В работе/Завершен)
+- [ ] **Интеграция с профилями** пользователей
+
 ## 📁 Структура проекта
 
 ```
 RDF-Rocky-bot-twa/
-├── profile/                      # Модуль профиля пользователя
-│   ├── profile.html              # ✅ Реализован
-│   ├── config.js                 # Локальные настройки (не коммитится)
-│   └── config.example.js         # Шаблон конфигурации
-├── callsheet/                    # Модуль вызывного листа
+├── 📄 README.md                   # 📖 Главная документация
+├── 📄 TODO.md                     # 📋 Планы и задачи
+├── 📄 SECURITY_SETUP.md           # 🔐 Настройка безопасности
+├── 📄 CLOUDFLARE_SETUP.md         # ⚡ Настройка Worker
+├── 📁 archive/                    # 📦 Архивные документы
+├── 📁 profile/                    # 👤 Управление профилями
+│   ├── profile-v3.html            # ✅ Отказоустойчивый профиль (CURRENT)
+│   ├── registration.html          # ✅ Регистрация пользователей
+│   └── debug.html                 # 🔧 Диагностическая страница
+├── 📁 callsheet/                  # 📋 Вызывные листы (Phase 2)
+├── 📁 N88n_part/                  # 🤖 n8n Automation
+│   └── [MAIN] Rocky_v2_webapp-10.json
+├── ⚡ cloudflare-worker-users.js  # 🔥 Production API (CURRENT)
+└── ⚡ cloudflare-worker-*.js      # 🔧 Другие версии Worker
 │   └── (в разработке)
 ├── feedback/                     # Модуль обратной связи
 │   └── (в разработке)
