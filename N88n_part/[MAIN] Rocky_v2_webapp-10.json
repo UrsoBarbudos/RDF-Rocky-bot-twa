@@ -1,0 +1,1155 @@
+{
+  "name": "[MAIN] Rocky_v2_webapp",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -960,
+        432
+      ],
+      "id": "dddd5037-ccb1-4b43-b5e4-c429d2b7deea",
+      "name": "Telegram Trigger",
+      "webhookId": "8f041b87-2c72-45db-9af5-c05af09cd184",
+      "credentials": {
+        "telegramApi": {
+          "id": "h3bConcwBn1Xiqhw",
+          "name": "Rocky"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "f41231d0-3a7b-4636-84cf-846ee76e7754"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Registr"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d6d820be-360e-4375-afc9-3681b6109424",
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+                    "rightValue": "/help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Help "
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "95268c8b-6dd0-4164-9dde-8eee9d6367c7",
+                    "leftValue": "={{ $json.callback_query }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Callback Query"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5006d68c-2c97-44ed-a160-db36a509587a",
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+                    "rightValue": "Вызывной",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Вызывной лист"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2d535440-97d2-4e8e-a721-b888cd37efbb",
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+                    "rightValue": "Расход",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Расход"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -640,
+        384
+      ],
+      "id": "13bcffe9-44da-401b-9c73-7d4d92bc48d4",
+      "name": "Проверка задачи"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dabf88e5-ada2-4dc0-98f0-204907f77939",
+              "name": "template.Text",
+              "value": "=Привет! Я ваш ассистент по управлению съемочным процессом. Вот что я умею:\n\n*Основные команды для всех:*\n🚀 /start - Регистрация в системе, если вы здесь впервые.\n🙋 /help - Помощь и примеры\n\n💸 *Добавление расхода:*\n— Начните сообщение со слова «Расход»\n— Укажите наименование и сумму (порядок любой, можно через запятую или с новой строки)\n— Валюта по умолчанию — рубли (знак ₽ можно не писать)\n\nПримеры:\n— Расход такси 450\n— Расход 450 такси\n— Расход кофе, 120\n— Расход\nвода 60\n— Расход реквизит 1200\n— Расход аренда локации 200,50\n\nЕсли не понял:\n— Я попрошу прислать «наименование сумма» одной строкой\n— Либо отправлю текст в ИИ и постараюсь распознать автоматически\n\nЧто происходит после:\n— Сразу после сохранения пришлю «Готово! ✅» с суммой и названием\n— Запись уходит в систему (время — по Москве)\n— Если что-то пойдет не так — подскажу, как исправить",
+              "type": "string"
+            },
+            {
+              "id": "fdc4b570-d2bc-47fa-a268-ce6ea9973391",
+              "name": "chat.id",
+              "value": "={{ $json.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "011c8296-358b-49fb-bfa5-111443fb1913",
+              "name": "template.Date",
+              "value": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -352,
+        320
+      ],
+      "id": "9bd2b922-d3f7-4d02-89ea-17cf02b4261d",
+      "name": "шаблон заметки помошника",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=[{{ $json.template.Text }}]",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Start",
+                    "additionalFields": {
+                      "callback_data": "/start"
+                    }
+                  },
+                  {
+                    "text": "Help",
+                    "additionalFields": {
+                      "callback_data": "/help"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        320
+      ],
+      "id": "1a23a9ea-71b1-4973-9d88-aeb6d8a52eda",
+      "name": "отправка заметки помощника",
+      "webhookId": "ffe9d812-5bc5-41fe-be0d-df3833a3d8c7",
+      "executeOnce": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "h3bConcwBn1Xiqhw",
+          "name": "Rocky"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- 1. Получаем все данные от Telegram ---\nconst update = $input.all()[0].json;\n\n// --- 2. Проверяем, что это вообще нажатие на кнопку ---\nif (!update.callback_query) {\n  return [{ json: { error: 'No callback query' } }];\n}\n\n// --- 3. Достаем строку из кнопки, например \"approve_12345_recABCDE\" ---\nconst callbackData = update.callback_query.data;\n\n// --- 4. ВОТ ЭТА СТРОКА ПРОПАЛА: Разделяем строку на части по символу \"_\" ---\nconst parts = callbackData.split('_'); \n\n// --- 5. Проверяем, что частей ровно 3 (действие, id_пользователя, id_записи) ---\nif (parts.length !== 3) {\n  console.error('Invalid callback_data format:', callbackData);\n  return [{ json: { error: 'Invalid callback data format' } }];\n}\n\n// --- 6. Берем первое слово (approve, reject или block) ---\nconst action = parts[0];\n\n// --- 7. Превращаем его в статус, который поймет Airtable ---\nlet statusForAirtable = '';\nif (action === 'approve') {\n  statusForAirtable = 'Approved';\n} else if (action === 'reject' || action === 'block') { // Ловим оба возможных варианта для отклонения\n  statusForAirtable = 'Blocked';\n}\n\n// --- 8. Если пришло что-то непонятное, лучше вернуть ошибку ---\nif (statusForAirtable === '') {\n  console.error('Invalid action:', action);\n  return [{ json: { error: 'Invalid action from callback' } }];\n}\n\n// --- 9. Возвращаем все данные в удобном виде для следующих узлов ---\nreturn [{\n  json: {\n    status: statusForAirtable, // <-- Правильный статус для Airtable\n    action: action,            // <-- Исходное действие\n    target_chat_id: parts[1],\n    record_id: parts[2],\n    admin_id: update.callback_query.from.id,\n    admin_username: update.callback_query.from.username || 'unknown',\n    message_id: update.callback_query.message.message_id,\n    chat_id: update.callback_query.message.chat.id,\n    callback_query_id: update.callback_query.id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        544
+      ],
+      "id": "c06d5864-b49f-4283-b575-1f9f93904916",
+      "name": "Parse callback DATA"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.fields.chat_id }}",
+        "text": "=✅ Поздравляю, {{ ($json.fields['@username'] || 'пользователь').replace(/([_*`])/g, '\\\\$1') }}! \nВаша заявка одобрена! Добро пожаловать на борт!! \n",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        448
+      ],
+      "id": "540c2d74-4c5f-43d1-bbf6-06b4e67fb906",
+      "name": "Notify User",
+      "webhookId": "3c331424-3ef8-4acb-af79-8751ead69ba3",
+      "credentials": {
+        "telegramApi": {
+          "id": "h3bConcwBn1Xiqhw",
+          "name": "Rocky"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = $json.message;\nconst user = message.from;\nconst chat_id = message.chat.id;\n\n// Извлекаем данные пользователя из Telegram\nreturn [{\n  json: {\n    chat_id: chat_id,\n    username: user.username || '',\n    first_name: user.first_name || '',\n    last_name: user.last_name || '',\n    full_name: [user.first_name, user.last_name].filter(n => n).join(' ') || 'Не указано'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        144
+      ],
+      "id": "4085e3cb-a565-4b67-a0c3-09b37775c29b",
+      "name": "Extract User Data"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appCukWqzOVvwnB75",
+          "mode": "list",
+          "cachedResultName": "RDF - вызывные",
+          "cachedResultUrl": "https://airtable.com/appCukWqzOVvwnB75"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbluzghroLui1Vhad",
+          "mode": "list",
+          "cachedResultName": "Пользователи",
+          "cachedResultUrl": "https://airtable.com/appCukWqzOVvwnB75/tbluzghroLui1Vhad"
+        },
+        "filterByFormula": "={chat_id} = \"{{ $json.chat_id }}\"",
+        "options": {
+          "fields": [
+            "chat_id",
+            "Статус доступа",
+            "RegistrationDate"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -192,
+        144
+      ],
+      "id": "160f5921-0468-45ce-8a5e-5ad178a3c803",
+      "name": "Check Existing Registration",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "Nm9l9FVmBZ3G2l1K",
+          "name": "N8n - rocky table"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appCukWqzOVvwnB75",
+          "mode": "list",
+          "cachedResultName": "RDF - вызывные",
+          "cachedResultUrl": "https://airtable.com/appCukWqzOVvwnB75"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbluzghroLui1Vhad",
+          "mode": "list",
+          "cachedResultName": "Пользователи",
+          "cachedResultUrl": "https://airtable.com/appCukWqzOVvwnB75/tbluzghroLui1Vhad"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "@username": "=@ {{ $('Extract User Data').item.json.username }}",
+            "chat_id": "={{ $('Extract User Data').item.json.chat_id }}",
+            "FirstName": "={{ $('Extract User Data').item.json.first_name }}",
+            "LastName": "={{ $('Extract User Data').item.json.last_name }}",
+            "Role": "USER",
+            "Статус доступа": "Pending"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "@username",
+              "displayName": "@username",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "FirstName",
+              "displayName": "FirstName",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "LastName",
+              "displayName": "LastName",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Платежные данные",
+              "displayName": "Платежные данные",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Примечание",
+              "displayName": "Примечание",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Role",
+              "displayName": "Role",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "USER",
+                  "value": "USER"
+                },
+                {
+                  "name": "ADMIN",
+                  "value": "ADMIN"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "RegistrationDate",
+              "displayName": "RegistrationDate",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Статус доступа",
+              "displayName": "Статус доступа",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pending",
+                  "value": "Pending"
+                },
+                {
+                  "name": "Approved",
+                  "value": "Approved"
+                },
+                {
+                  "name": "Blocked",
+                  "value": "Blocked"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        192,
+        -48
+      ],
+      "id": "79241492-fecd-4b3b-a635-c07baf11102a",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "Nm9l9FVmBZ3G2l1K",
+          "name": "N8n - rocky table"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1dbf0206-1d7c-485c-a66e-7529db03fe68",
+                    "leftValue": "={{ $json[\"Статус доступа\"] }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notExists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Newborn"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json[\"Статус доступа\"] }}",
+                    "rightValue": "Approved",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "9c1a76c9-f1dc-40f0-976b-f38455479112"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Approved"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d71b8ac4-4723-404c-9cbb-5571541dd09f",
+                    "leftValue": "={{ $json[\"Статус доступа\"] }}",
+                    "rightValue": "Pending",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pending"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "75fe6a20-3f60-409b-b8cd-bfc6206b2040",
+                    "leftValue": "={{ $json[\"Статус доступа\"] }}",
+                    "rightValue": "Blocked",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Blocked"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        0,
+        64
+      ],
+      "id": "2cb66a4a-ccbd-4399-b639-f16b6cbc3797",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "182719187",
+        "text": "=🔔 *Новая заявка на регистрацию*  \n\n👤 *Пользователь:* {{ ($('Extract User Data').item.json.full_name || 'Имя не указано').replace(/([_*`[\\]()~>#+\\-=|{}.!])/g, '\\\\$1') }} \n🆔 *ID:* `{{ $('Extract User Data').item.json.chat_id }}` \n📝 *Username:* @{{ ($('Extract User Data').item.json.username || 'не указан').replace(/([_*`[\\]()~>#+\\-=|{}.!])/g, '\\\\$1') }} \n",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Одобрить",
+                    "additionalFields": {
+                      "callback_data": "=approve_{{ $('Extract User Data').item.json.chat_id }}_{{ $('Create a record').item.json.id }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Отклонить",
+                    "additionalFields": {
+                      "callback_data": "=block_{{ $('Extract User Data').item.json.chat_id }}_{{ $('Create a record').item.json.id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "MarkdownV2"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        -48
+      ],
+      "id": "db2f335e-1d89-4630-a870-be69a47199a3",
+      "name": "to Admin",
+      "webhookId": "83ecd383-ac08-4f32-bee2-913fa29f31d1",
+      "credentials": {
+        "telegramApi": {
+          "id": "h3bConcwBn1Xiqhw",
+          "name": "Rocky"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "792499fb-2c79-4ac3-b9a1-823e62a951d3",
+              "leftValue": "={{ $json.fields[\"Статус доступа\"] }}",
+              "rightValue": "Approved",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        544
+      ],
+      "id": "6f78c85a-da47-4cc7-9e0e-77238ce424a3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "182719187",
+        "text": "=✅ Пользователь [@{{ $json.result.chat.username }}] успешно зарегистрирован и получил уведомление.\n",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        448
+      ],
+      "id": "096f3f9f-d779-46a9-b401-ef77135690a1",
+      "name": "to Admin1",
+      "webhookId": "83ecd383-ac08-4f32-bee2-913fa29f31d1",
+      "credentials": {
+        "telegramApi": {
+          "id": "h3bConcwBn1Xiqhw",
+          "name": "Rocky"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.fields.chat_id }}",
+        "text": "=❌ Заявка отклонена\n\nК сожалению, в данный момент администратор не смог одобрить вашу заявку.\n\nЕсли вы считаете, что это ошибка, пожалуйста, свяжитесь с руководителем вашего проекта для уточнения деталей.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        624
+      ],
+      "id": "626400fd-f0ba-49e6-bdd3-45b43cefb5ce",
+      "name": "Notify User1",
+      "webhookId": "3c331424-3ef8-4acb-af79-8751ead69ba3",
+      "credentials": {
+        "telegramApi": {
+          "id": "h3bConcwBn1Xiqhw",
+          "name": "Rocky"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appCukWqzOVvwnB75",
+          "mode": "list",
+          "cachedResultName": "RDF - вызывные",
+          "cachedResultUrl": "https://airtable.com/appCukWqzOVvwnB75"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbluzghroLui1Vhad",
+          "mode": "list",
+          "cachedResultName": "Пользователи",
+          "cachedResultUrl": "https://airtable.com/appCukWqzOVvwnB75/tbluzghroLui1Vhad"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $json.chat_id }}",
+            "Статус доступа": "={{ $json.status }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "@username",
+              "displayName": "@username",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "FirstName",
+              "displayName": "FirstName",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "LastName",
+              "displayName": "LastName",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Платежные данные",
+              "displayName": "Платежные данные",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Примечание",
+              "displayName": "Примечание",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Role",
+              "displayName": "Role",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "USER",
+                  "value": "USER"
+                },
+                {
+                  "name": "ADMIN",
+                  "value": "ADMIN"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "RegistrationDate",
+              "displayName": "RegistrationDate",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Статус доступа",
+              "displayName": "Статус доступа",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pending",
+                  "value": "Pending"
+                },
+                {
+                  "name": "Approved",
+                  "value": "Approved"
+                },
+                {
+                  "name": "Blocked",
+                  "value": "Blocked"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -32,
+        544
+      ],
+      "id": "030f3fe0-e5b9-467f-a026-ca09c40028f2",
+      "name": "Update Status",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "Nm9l9FVmBZ3G2l1K",
+          "name": "N8n - rocky table"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=✅ Поздравляю, [@{{ $('Extract User Data').item.json.username }}]! \nВаша заявка уже одобена!\n",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        112
+      ],
+      "id": "fd45aad4-462f-451e-8f7a-5f0dbfb7ef47",
+      "name": "Notify User2",
+      "webhookId": "3c331424-3ef8-4acb-af79-8751ead69ba3",
+      "credentials": {
+        "telegramApi": {
+          "id": "h3bConcwBn1Xiqhw",
+          "name": "Rocky"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Проверка задачи",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка задачи": {
+      "main": [
+        [
+          {
+            "node": "Extract User Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "шаблон заметки помошника",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse callback DATA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        []
+      ]
+    },
+    "шаблон заметки помошника": {
+      "main": [
+        [
+          {
+            "node": "отправка заметки помощника",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "отправка заметки помощника": {
+      "main": [
+        []
+      ]
+    },
+    "Parse callback DATA": {
+      "main": [
+        [
+          {
+            "node": "Update Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify User": {
+      "main": [
+        [
+          {
+            "node": "to Admin1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract User Data": {
+      "main": [
+        [
+          {
+            "node": "Check Existing Registration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Existing Registration": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify User2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        []
+      ]
+    },
+    "Create a record": {
+      "main": [
+        [
+          {
+            "node": "to Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Notify User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify User1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify User1": {
+      "main": [
+        []
+      ]
+    },
+    "Update Status": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "15d71564-fb92-47b3-be81-19b2d6edee33",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9bd087063adc12885256a959789d9e1ee2d262431c4fe7bf1fe74b2a6f236d15"
+  },
+  "id": "PLIwbdJY5v021dxw",
+  "tags": [
+    {
+      "updatedAt": "2025-08-06T06:28:15.986Z",
+      "createdAt": "2025-08-06T05:19:07.662Z",
+      "id": "tCGm042iuyKShffr",
+      "name": "[TG BOT] Rocky_RDF"
+    }
+  ]
+}

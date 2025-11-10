@@ -12,7 +12,7 @@
 
         // --- API ЛОГИКА ---
         async function loadUserProfile(chatId) {
-            const url = `${API_URL}/profile?chat_id=${chatId}`;
+            const url = `${API_URL}/api/profile?chat_id=${chatId}`;
 
             try {
                 const response = await fetch(url, {
@@ -23,6 +23,13 @@
                 
                 if (!response.ok) {
                     const errorData = await response.json();
+                    
+                    // Если пользователь не зарегистрирован, перенаправляем на регистрацию
+                    if (response.status === 404 && errorData.redirect === 'registration') {
+                        window.location.href = '../registration/registration.html';
+                        return;
+                    }
+                    
                     throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
                 }
                 
@@ -34,8 +41,8 @@
             }
         }
 
-        async function saveUserProfile(recordId, userData) {
-            const url = `${API_URL}/profile`;
+        async function saveUserProfile(chatId, userData) {
+            const url = `${API_URL}/api/profile`;
 
             try {
                 const response = await fetch(url, {
@@ -45,8 +52,9 @@
                         'X-Telegram-Init-Data': tg.initData
                     },
                     body: JSON.stringify({
-                        recordId: recordId || null,
-                        userData: userData
+                        chat_id: chatId,
+                        payment_info: userData.payment_info,
+                        notes: userData.notes
                     })
                 });
                 
@@ -102,17 +110,16 @@
             try {
                 const userProfileData = await loadUserProfile(user.id);
 
-                if (userProfileData && userProfileData.isNewUser) {
-                    // Новый пользователь
-                    form.dataset.recordId = '';
-                    showError(''); // Очищаем сообщения об ошибках
-                } else if (userProfileData && userProfileData.fields) {
+                if (userProfileData && userProfileData.success && userProfileData.user) {
                     // Существующий пользователь с данными
-                    form.dataset.recordId = userProfileData.id || '';
-
-                    document.getElementById('phone').value = userProfileData.fields['Номер телефона '] || '';
-                    document.getElementById('payment').value = userProfileData.fields['Платежные данные'] || '';
-                    document.getElementById('notes').value = userProfileData.fields['Примечание'] || '';
+                    const userData = userProfileData.user;
+                    
+                    document.getElementById('payment').value = userData.payment_info || '';
+                    document.getElementById('notes').value = userData.notes || '';
+                    
+                    // Обновляем отображение пользователя
+                    document.getElementById('userId').textContent = userData.chat_id;
+                    document.getElementById('username').textContent = userData.username ? `@${userData.username}` : 'Не указан';
                 }
                 showLoading(false);
             } catch (error) {
@@ -145,24 +152,19 @@
             tg.MainButton.showProgress();
             showError('');
 
-            const recordId = form.dataset.recordId;
             const userData = {
-                'chat_id': tg.initDataUnsafe.user.id,
-                '@username': tg.initDataUnsafe.user.username || '',
-                'Номер телефона ': document.getElementById('phone').value,
-                'Платежные данные': document.getElementById('payment').value,
-                'Примечание': document.getElementById('notes').value
+                payment_info: document.getElementById('payment').value,
+                notes: document.getElementById('notes').value
             };
 
             try {
-                const result = await saveUserProfile(recordId, userData);
-                if (result && result.records && result.records.length > 0) {
-                    form.dataset.recordId = result.records[0].id;
+                const result = await saveUserProfile(tg.initDataUnsafe.user.id, userData);
+                if (result && result.success) {
                     tg.showAlert('✅ Профиль успешно сохранен!', () => {
                         tg.close();
                     });
                 } else {
-                    throw new Error("Save operation failed");
+                    throw new Error(result.message || "Save operation failed");
                 }
             } catch (error) {
                 console.error(error);
@@ -282,11 +284,7 @@
                 <p><strong>Username:</strong> <span id="username"></span></p>
             </div>
 
-            <div class="form-group">
-                <label for="phone">📱 Контактный телефон</label>
-                <input type="tel" id="phone" name="phone" placeholder="+7 (999) 123-45-67">
-                <div class="hint">Укажите номер телефона для связи</div>
-            </div>
+
 
             <div class="form-group">
                 <label for="payment">💳 Платежные реквизиты</label>
