@@ -101,8 +101,11 @@
                 
                 // Правильно отображаем username
                 let displayUsername = user.username || 'Не указан';
-                if (displayUsername !== 'Не указан' && !displayUsername.startsWith('@')) {
-                    displayUsername = '@' + displayUsername;
+                if (displayUsername !== 'Не указан') {
+                    displayUsername = displayUsername.trim();
+                    if (!displayUsername.startsWith('@')) {
+                        displayUsername = '@' + displayUsername;
+                    }
                 }
                 document.getElementById('username').textContent = displayUsername;
                 
@@ -131,16 +134,21 @@
                     // Обновляем отображение пользователя
                     document.getElementById('userId').textContent = userData.chat_id;
                     
-                    // Исправляем отображение username - убираем двойные @@
+                    // Исправляем отображение username - убираем двойные @@ и лишние пробелы
                     let displayUsername = userData.username || 'Не указан';
-                    if (displayUsername !== 'Не указан' && !displayUsername.startsWith('@')) {
-                        displayUsername = '@' + displayUsername;
+                    if (displayUsername !== 'Не указан') {
+                        // Убираем лишние пробелы и нормализуем
+                        displayUsername = displayUsername.trim();
+                        // Если уже есть @ в начале, используем как есть, иначе добавляем
+                        if (!displayUsername.startsWith('@')) {
+                            displayUsername = '@' + displayUsername;
+                        }
                     }
                     document.getElementById('username').textContent = displayUsername;
                     
                     // Добавляем отображение новых полей
-                    document.getElementById('firstName').textContent = userData.FirstName || 'Не указано';
-                    document.getElementById('lastName').textContent = userData.LastName || 'Не указано';
+                    document.getElementById('firstName').textContent = userData.first_name || 'Не указано';
+                    document.getElementById('lastName').textContent = userData.last_name || 'Не указано';
                     document.getElementById('phone').textContent = userData.phone || 'Не указан';
                 }
                 showLoading(false);
