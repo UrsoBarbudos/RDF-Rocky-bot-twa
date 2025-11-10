@@ -98,7 +98,18 @@
             const user = tg.initDataUnsafe?.user;
             if (user) {
                 document.getElementById('userId').textContent = user.id;
-                document.getElementById('username').textContent = user.username || 'Не указан';
+                
+                // Правильно отображаем username
+                let displayUsername = user.username || 'Не указан';
+                if (displayUsername !== 'Не указан' && !displayUsername.startsWith('@')) {
+                    displayUsername = '@' + displayUsername;
+                }
+                document.getElementById('username').textContent = displayUsername;
+                
+                // Инициализируем остальные поля
+                document.getElementById('firstName').textContent = user.first_name || 'Не указано';
+                document.getElementById('lastName').textContent = user.last_name || 'Не указано';
+                document.getElementById('phone').textContent = 'Не указан';
             }
 
             tg.MainButton.setText('💾 Сохранить изменения');
@@ -119,7 +130,18 @@
                     
                     // Обновляем отображение пользователя
                     document.getElementById('userId').textContent = userData.chat_id;
-                    document.getElementById('username').textContent = userData.username ? `@${userData.username}` : 'Не указан';
+                    
+                    // Исправляем отображение username - убираем двойные @@
+                    let displayUsername = userData.username || 'Не указан';
+                    if (displayUsername !== 'Не указан' && !displayUsername.startsWith('@')) {
+                        displayUsername = '@' + displayUsername;
+                    }
+                    document.getElementById('username').textContent = displayUsername;
+                    
+                    // Добавляем отображение новых полей
+                    document.getElementById('firstName').textContent = userData.FirstName || 'Не указано';
+                    document.getElementById('lastName').textContent = userData.LastName || 'Не указано';
+                    document.getElementById('phone').textContent = userData.phone || 'Не указан';
                 }
                 showLoading(false);
             } catch (error) {
@@ -282,6 +304,9 @@
             <div class="info-block">
                 <p><strong>ID:</strong> <span id="userId"></span></p>
                 <p><strong>Username:</strong> <span id="username"></span></p>
+                <p><strong>Имя:</strong> <span id="firstName"></span></p>
+                <p><strong>Фамилия:</strong> <span id="lastName"></span></p>
+                <p><strong>Телефон:</strong> <span id="phone"></span></p>
             </div>
 
 
