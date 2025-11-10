@@ -15,13 +15,22 @@
             const url = `${API_URL}/profile?chat_id=${chatId}`;
 
             try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Telegram-Init-Data': tg.initData
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 return data || {};
             } catch (error) {
                 console.error("Error loading user profile:", error);
-                return null;
+                throw error;
             }
         }
 
@@ -31,17 +40,25 @@
             try {
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': tg.initData
+                    },
                     body: JSON.stringify({
                         recordId: recordId || null,
                         userData: userData
                     })
                 });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
                 return await response.json();
             } catch (error) {
                 console.error("Error saving user profile:", error);
-                return null;
+                throw error;
             }
         }
 
@@ -85,8 +102,12 @@
             try {
                 const userProfileData = await loadUserProfile(user.id);
 
-                if (userProfileData && userProfileData.fields) {
-                    // Сохраняем ID записи для будущего обновления
+                if (userProfileData && userProfileData.isNewUser) {
+                    // Новый пользователь
+                    form.dataset.recordId = '';
+                    showError(''); // Очищаем сообщения об ошибках
+                } else if (userProfileData && userProfileData.fields) {
+                    // Существующий пользователь с данными
                     form.dataset.recordId = userProfileData.id || '';
 
                     document.getElementById('phone').value = userProfileData.fields['Номер телефона '] || '';
@@ -96,7 +117,10 @@
                 showLoading(false);
             } catch (error) {
                 console.error(error);
-                showError('Не удалось загрузить данные профиля. Попробуйте позже.');
+                
+                // Показываем конкретное сообщение об ошибке
+                const errorMessage = error.message || 'Не удалось загрузить данные профиля. Попробуйте позже.';
+                showError(errorMessage);
                 showLoading(false);
             }
         });
