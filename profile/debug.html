@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Profile</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .log { background: #333; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 12px; }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .info { background: #1976d2; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug Profile v2</h1>
+    <div id="logs"></div>
+
+    <script>
+        const logs = document.getElementById('logs');
+        
+        function addLog(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logs.appendChild(div);
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        async function testProfile() {
+            try {
+                addLog('🚀 Starting debug session');
+                
+                // 1. Проверяем Telegram WebApp
+                addLog(`Telegram WebApp: ${!!window.Telegram?.WebApp ? '✅ Available' : '❌ Not found'}`);
+                
+                if (!window.Telegram?.WebApp) {
+                    addLog('❌ Telegram WebApp SDK not loaded', 'error');
+                    return;
+                }
+
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                
+                // 2. Проверяем initData
+                addLog(`InitData: ${tg.initData ? '✅ Present' : '❌ Missing'}`);
+                addLog(`InitData length: ${tg.initData?.length || 0}`);
+                
+                // 3. Проверяем пользователя
+                const user = tg.initDataUnsafe?.user;
+                addLog(`User data: ${user ? '✅ Present' : '❌ Missing'}`);
+                
+                if (user) {
+                    addLog(`User ID: ${user.id}`);
+                    addLog(`Username: ${user.username || 'N/A'}`);
+                    addLog(`First name: ${user.first_name || 'N/A'}`);
+                    addLog(`Last name: ${user.last_name || 'N/A'}`);
+                } else {
+                    addLog('❌ No user data available', 'error');
+                    return;
+                }
+
+                // 4. Тестируем API
+                const apiUrl = 'https://rocky-bot-api.egordkd.workers.dev/api/profile';
+                const testUrl = `${apiUrl}?chat_id=${user.id}`;
+                
+                addLog(`🌍 Testing API: ${testUrl}`);
+                
+                const response = await fetch(testUrl, {
+                    headers: {
+                        'X-Telegram-Init-Data': tg.initData || '',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                addLog(`📡 Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                addLog(`📡 Response OK: ${response.ok}`, response.ok ? 'success' : 'error');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    addLog(`❌ Error response: ${errorText}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                addLog(`✅ API Response received`, 'success');
+                addLog(`Data: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success && data.user) {
+                    addLog(`✅ Profile loaded successfully!`, 'success');
+                    addLog(`Username: ${data.user.username}`);
+                    addLog(`Name: ${data.user.first_name} ${data.user.last_name}`);
+                } else {
+                    addLog(`❌ Invalid API response structure`, 'error');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Fatal error: ${error.message}`, 'error');
+                addLog(`❌ Error stack: ${error.stack}`, 'error');
+            }
+        }
+
+        // Запускаем тест
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(testProfile, 1000); // Задержка для загрузки SDK
+        });
+    </script>
+</body>
+</html>
