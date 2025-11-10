@@ -16,14 +16,20 @@
         // --- API ЛОГИКА ---
         async function loadUserProfile(chatId) {
             const url = `${API_URL}/api/profile?chat_id=${chatId}`;
+            
+            console.log('🌍 Requesting URL:', url);
+            console.log('🔑 Init data length:', tg.initData?.length || 0);
 
             try {
                 const response = await fetch(url, {
                     headers: {
-                        'X-Telegram-Init-Data': tg.initData,
+                        'X-Telegram-Init-Data': tg.initData || '',
                         'Cache-Control': 'no-cache'
                     }
                 });
+                
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response ok:', response.ok);
                 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -75,8 +81,14 @@
 
         // --- ИНИЦИАЛИЗАЦИЯ ---
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Profile v2 started');
+            console.log('Telegram WebApp available:', !!window.Telegram?.WebApp);
+            
             tg.ready();
             tg.expand();
+            
+            console.log('🔍 InitData available:', !!tg.initData);
+            console.log('🔍 User data:', tg.initDataUnsafe?.user);
 
             const form = document.getElementById('profileForm');
             const loadingEl = document.getElementById('loading');
@@ -97,21 +109,28 @@
             }
 
             const user = tg.initDataUnsafe?.user;
-            if (user) {
-                document.getElementById('userId').textContent = user.id;
-                
-                // Простое отображение username
-                let displayUsername = user.username || 'Не указан';
-                if (displayUsername !== 'Не указан' && !displayUsername.startsWith('@')) {
-                    displayUsername = '@' + displayUsername;
-                }
-                document.getElementById('username').textContent = displayUsername;
-                
-                // Инициализируем остальные поля
-                document.getElementById('firstName').textContent = user.first_name || 'Не указано';
-                document.getElementById('lastName').textContent = user.last_name || 'Не указано';
-                document.getElementById('phone').textContent = 'Не указан';
+            if (!user) {
+                console.error('❌ No user data from Telegram');
+                showError('Ошибка: Нет данных пользователя от Telegram');
+                showLoading(false);
+                return;
             }
+            
+            console.log('✅ User found:', user);
+            
+            document.getElementById('userId').textContent = user.id;
+            
+            // Простое отображение username
+            let displayUsername = user.username || 'Не указан';
+            if (displayUsername !== 'Не указан' && !displayUsername.startsWith('@')) {
+                displayUsername = '@' + displayUsername;
+            }
+            document.getElementById('username').textContent = displayUsername;
+            
+            // Инициализируем остальные поля
+            document.getElementById('firstName').textContent = user.first_name || 'Не указано';
+            document.getElementById('lastName').textContent = user.last_name || 'Не указано';
+            document.getElementById('phone').textContent = 'Не указан';
 
             tg.MainButton.setText('💾 Сохранить изменения');
             tg.MainButton.show();
@@ -120,7 +139,9 @@
             showError('');
 
             try {
+                console.log('📡 Loading profile for user:', user.id);
                 const userProfileData = await loadUserProfile(user.id);
+                console.log('📡 Profile data received:', userProfileData);
 
                 if (userProfileData && userProfileData.success && userProfileData.user) {
                     // Существующий пользователь с данными
@@ -142,10 +163,15 @@
                 }
                 showLoading(false);
             } catch (error) {
-                console.error(error);
+                console.error('❌ Profile loading error:', error);
+                console.error('❌ Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
                 
                 // Показываем сообщение об ошибке и скрываем форму
-                const errorMessage = error.message || 'Не удалось загрузить данные профиля. Попробуйте позже.';
+                const errorMessage = `Ошибка: ${error.message || 'Неизвестная ошибка'}`;
                 showError(errorMessage);
                 
                 // Скрываем форму и кнопку при ошибке доступа
