@@ -8,29 +8,8 @@
     <script>
         // --- НАСТРОЙКИ API ---
         const API_URL = 'https://rocky-bot-api.egordkd.workers.dev';
-
         const tg = window.Telegram.WebApp;
-        const form = document.getElementById('profile-form');
-        const loader = document.getElementById('loader');
-        const errorContainer = document.getElementById('error-message');
-        const userIdElement = document.getElementById('user-id');
-        const usernameElement = document.getElementById('username');
 
-        // --- UI ФУНКЦИИ ---
-        function showLoader(show) {
-            loader.style.display = show ? 'block' : 'none';
-        }
-
-        function showError(message) {
-            if (message) {
-                errorContainer.textContent = message;
-                errorContainer.style.display = 'block';
-            } else {
-                errorContainer.style.display = 'none';
-            }
-        }
-
-        
         // --- API ЛОГИКА ---
         async function loadUserProfile(chatId) {
             const url = `${API_URL}/profile?chat_id=${chatId}`;
@@ -71,66 +50,95 @@
             tg.ready();
             tg.expand();
 
-            const user = tg.initDataUnsafe.user;
-            if (user) {
-                userIdElement.textContent = `ID: ${user.id}`;
-                usernameElement.textContent = `Username: ${user.username || 'not available'}`;
+            // Инициализация элементов после загрузки DOM
+            const form = document.getElementById('profileForm');
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+
+            // UI функции
+            function showLoading(show) {
+                loadingEl.style.display = show ? 'block' : 'none';
+                form.style.display = show ? 'none' : 'block';
             }
 
-            tg.MainButton.setText('Сохранить изменения');
+            function showError(message) {
+                if (message) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = 'block';
+                } else {
+                    errorEl.style.display = 'none';
+                }
+            }
+
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById('userId').textContent = user.id;
+                document.getElementById('username').textContent = user.username || 'Не указан';
+            }
+
+            tg.MainButton.setText('💾 Сохранить изменения');
             tg.MainButton.show();
 
-            showLoader(true);
-            showError(null);
+            showLoading(true);
+            showError('');
 
             try {
                 const userProfileData = await loadUserProfile(user.id);
 
-                if (userProfileData) {
+                if (userProfileData && userProfileData.fields) {
                     // Сохраняем ID записи для будущего обновления
                     form.dataset.recordId = userProfileData.id || '';
 
-                    document.getElementById('phone').value = userProfileData.fields?.['Контактный телефон'] || '';
-                    document.getElementById('paymentDetails').value = userProfileData.fields?.['Платежные реквизиты'] || '';
-                    document.getElementById('notes').value = userProfileData.fields?.['Примечание'] || '';
-                } else {
-                    throw new Error("Profile data is null");
+                    document.getElementById('phone').value = userProfileData.fields['Номер телефона '] || '';
+                    document.getElementById('payment').value = userProfileData.fields['Платежные данные'] || '';
+                    document.getElementById('notes').value = userProfileData.fields['Примечание'] || '';
                 }
+                showLoading(false);
             } catch (error) {
                 console.error(error);
                 showError('Не удалось загрузить данные профиля. Попробуйте позже.');
-            } finally {
-                showLoader(false);
+                showLoading(false);
             }
         });
 
         tg.MainButton.onClick(async () => {
-            if (tg.MainButton.isLoading) return;
+            const form = document.getElementById('profileForm');
+            const errorEl = document.getElementById('error');
+            
+            function showError(message) {
+                if (message) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = 'block';
+                } else {
+                    errorEl.style.display = 'none';
+                }
+            }
 
             tg.MainButton.showProgress();
-            showError(null);
+            showError('');
 
             const recordId = form.dataset.recordId;
             const userData = {
-                'chat_id': String(tg.initDataUnsafe.user.id),
-                '@username': tg.initDataUnsafe.user.username,
-                'Контактный телефон': document.getElementById('phone').value,
-                'Платежные реквизиты': document.getElementById('paymentDetails').value,
+                'chat_id': tg.initDataUnsafe.user.id,
+                '@username': tg.initDataUnsafe.user.username || '',
+                'Номер телефона ': document.getElementById('phone').value,
+                'Платежные данные': document.getElementById('payment').value,
                 'Примечание': document.getElementById('notes').value
             };
 
             try {
                 const result = await saveUserProfile(recordId, userData);
                 if (result && result.records && result.records.length > 0) {
-                    // Обновляем recordId на случай, если это была новая запись
                     form.dataset.recordId = result.records[0].id;
-                    tg.showPopup({ message: 'Профиль успешно сохранен!' });
+                    tg.showAlert('✅ Профиль успешно сохранен!', () => {
+                        tg.close();
+                    });
                 } else {
-                    throw new Error("Save operation failed or returned no records.");
+                    throw new Error("Save operation failed");
                 }
             } catch (error) {
                 console.error(error);
-                showError('Не удалось сохранить данные. Проверьте введенные значения и попробуйте снова.');
+                showError('Не удалось сохранить данные. Попробуйте снова.');
             } finally {
                 tg.MainButton.hideProgress();
             }
