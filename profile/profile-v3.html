@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль пользователя v3.0</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 8px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #3390ec);
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-top: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+
+        .error {
+            background-color: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .info-block {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-block p {
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 4px;
+        }
+
+        .info-block p:last-child {
+            margin-bottom: 0;
+        }
+
+        .status {
+            background: #e8f5e8;
+            color: #2e7d2e;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👤 Мой профиль</h1>
+        
+        <div id="error" class="error"></div>
+        <div id="loading" class="loading">Загрузка данных...</div>
+        
+        <form id="profileForm" style="display: none;">
+            <div class="info-block">
+                <p><strong>ID:</strong> <span id="userId"></span></p>
+                <p><strong>Username:</strong> <span id="username"></span></p>
+                <p><strong>Имя:</strong> <span id="firstName"></span></p>
+                <p><strong>Фамилия:</strong> <span id="lastName"></span></p>
+                <p><strong>Статус:</strong> <span id="status" class="status">Одобрен ✅</span></p>
+            </div>
+
+            <div class="form-group">
+                <label for="payment">💳 Платежные реквизиты</label>
+                <textarea id="payment" name="payment" placeholder="Номер карты, СБП или другие реквизиты"></textarea>
+                <div class="hint">Укажите реквизиты для получения оплаты</div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">📝 Примечание</label>
+                <textarea id="notes" name="notes" placeholder="Дополнительная информация"></textarea>
+                <div class="hint">Любая дополнительная информация о вас</div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const API_URL = 'https://rocky-bot-api.egordkd.workers.dev';
+        const tg = window.Telegram.WebApp;
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                tg.ready();
+                tg.expand();
+
+                const form = document.getElementById('profileForm');
+                const loadingEl = document.getElementById('loading');
+                const errorEl = document.getElementById('error');
+
+                function showLoading(show) {
+                    loadingEl.style.display = show ? 'block' : 'none';
+                    form.style.display = show ? 'none' : 'block';
+                }
+
+                function showError(message) {
+                    if (message) {
+                        errorEl.textContent = message;
+                        errorEl.style.display = 'block';
+                    } else {
+                        errorEl.style.display = 'none';
+                    }
+                }
+
+                // Получаем данные пользователя из Telegram
+                const user = tg.initDataUnsafe?.user;
+                if (!user) {
+                    showError('Ошибка: Нет данных пользователя от Telegram');
+                    showLoading(false);
+                    return;
+                }
+
+                // Отображаем базовую информацию
+                document.getElementById('userId').textContent = user.id;
+                
+                let displayUsername = user.username || 'Не указан';
+                if (displayUsername !== 'Не указан' && !displayUsername.startsWith('@')) {
+                    displayUsername = '@' + displayUsername;
+                }
+                document.getElementById('username').textContent = displayUsername;
+                
+                document.getElementById('firstName').textContent = user.first_name || 'Не указано';
+                document.getElementById('lastName').textContent = user.last_name || 'Не указано';
+
+                tg.MainButton.setText('💾 Сохранить изменения');
+                tg.MainButton.show();
+
+                // Пробуем загрузить данные из API (но не блокируем интерфейс)
+                try {
+                    const response = await fetch(`${API_URL}/api/profile?chat_id=${user.id}`, {
+                        headers: {
+                            'X-Telegram-Init-Data': tg.initData || ''
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.user) {
+                            // Обновляем данные если API ответил
+                            document.getElementById('payment').value = data.user.payment_info || '';
+                            document.getElementById('notes').value = data.user.notes || '';
+                            
+                            // Обновляем username если API вернул лучшую версию
+                            if (data.user.username) {
+                                document.getElementById('username').textContent = data.user.username;
+                            }
+                        }
+                    }
+                } catch (apiError) {
+                    console.log('API недоступен, используем базовые данные:', apiError.message);
+                    // Не показываем ошибку пользователю, просто работаем без API
+                }
+
+                showLoading(false);
+
+                // Обработчик сохранения
+                tg.MainButton.onClick(async () => {
+                    tg.MainButton.showProgress();
+
+                    const userData = {
+                        payment_info: document.getElementById('payment').value,
+                        notes: document.getElementById('notes').value
+                    };
+
+                    try {
+                        const response = await fetch(`${API_URL}/api/profile`, {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-Telegram-Init-Data': tg.initData || ''
+                            },
+                            body: JSON.stringify({
+                                chat_id: user.id,
+                                ...userData
+                            })
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            if (result.success) {
+                                tg.showAlert('✅ Профиль успешно сохранен!', () => {
+                                    tg.close();
+                                });
+                            } else {
+                                throw new Error(result.message || 'Ошибка сохранения');
+                            }
+                        } else {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                    } catch (error) {
+                        console.error('Ошибка сохранения:', error);
+                        tg.showAlert('❌ Не удалось сохранить изменения. Попробуйте позже.');
+                    } finally {
+                        tg.MainButton.hideProgress();
+                    }
+                });
+
+            } catch (error) {
+                console.error('Критическая ошибка:', error);
+                document.getElementById('error').textContent = 'Критическая ошибка загрузки';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

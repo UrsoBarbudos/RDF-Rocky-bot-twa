@@ -63,20 +63,22 @@
                 }
 
                 // 4. Тестируем API
+                addLog('4️⃣ Тестирование API запроса', 'info');
                 const apiUrl = 'https://rocky-bot-api.egordkd.workers.dev/api/profile';
                 const testUrl = `${apiUrl}?chat_id=${user.id}`;
                 
                 addLog(`🌍 Testing API: ${testUrl}`);
                 
-                const response = await fetch(testUrl, {
-                    headers: {
-                        'X-Telegram-Init-Data': tg.initData || '',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-                
-                addLog(`📡 Response status: ${response.status}`, response.ok ? 'success' : 'error');
-                addLog(`📡 Response OK: ${response.ok}`, response.ok ? 'success' : 'error');
+                try {
+                    const response = await fetch(testUrl, {
+                        headers: {
+                            'X-Telegram-Init-Data': tg.initData || '',
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
+                    
+                    addLog(`📡 Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                    addLog(`📡 Response OK: ${response.ok}`, response.ok ? 'success' : 'error');
                 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -94,6 +96,14 @@
                     addLog(`Name: ${data.user.first_name} ${data.user.last_name}`);
                 } else {
                     addLog(`❌ Invalid API response structure`, 'error');
+                }
+                
+                } catch (apiError) {
+                    addLog(`❌ API request error: ${apiError.message}`, 'error');
+                    addLog(`❌ API error type: ${apiError.name}`, 'error');
+                    if (apiError.stack) {
+                        addLog(`❌ API stack: ${apiError.stack}`, 'error');
+                    }
                 }
                 
             } catch (error) {
