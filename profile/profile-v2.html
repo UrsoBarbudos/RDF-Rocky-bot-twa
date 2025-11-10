@@ -21,12 +21,16 @@
             console.log('🔑 Init data length:', tg.initData?.length || 0);
 
             try {
-                const response = await fetch(url, {
-                    headers: {
-                        'X-Telegram-Init-Data': tg.initData || '',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
+                const headers = {
+                    'Cache-Control': 'no-cache'
+                };
+                
+                // Добавляем initData только если он есть
+                if (tg.initData) {
+                    headers['X-Telegram-Init-Data'] = tg.initData;
+                }
+                
+                const response = await fetch(url, { headers });
                 
                 console.log('📡 Response status:', response.status);
                 console.log('📡 Response ok:', response.ok);
@@ -140,8 +144,24 @@
 
             try {
                 console.log('📡 Loading profile for user:', user.id);
-                const userProfileData = await loadUserProfile(user.id);
-                console.log('📡 Profile data received:', userProfileData);
+                
+                // Пробуем загрузить профиль с retry логикой
+                let userProfileData;
+                let attempts = 0;
+                const maxAttempts = 3;
+                
+                while (attempts < maxAttempts) {
+                    try {
+                        userProfileData = await loadUserProfile(user.id);
+                        console.log('📡 Profile data received:', userProfileData);
+                        break;
+                    } catch (retryError) {
+                        attempts++;
+                        console.log(`⚠️ Attempt ${attempts} failed:`, retryError.message);
+                        if (attempts >= maxAttempts) throw retryError;
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Ждем секунду
+                    }
+                }
 
                 if (userProfileData && userProfileData.success && userProfileData.user) {
                     // Существующий пользователь с данными
@@ -153,13 +173,18 @@
                     document.getElementById('notes').value = userData.notes || '';
                     
                     // Обновляем отображение пользователя (API уже нормализует данные)
-                    document.getElementById('userId').textContent = userData.chat_id;
-                    document.getElementById('username').textContent = userData.username || 'Не указан';
+                    document.getElementById('userId').textContent = userData.chat_id || user.id;
+                    document.getElementById('username').textContent = userData.username || displayUsername;
                     
                     // Добавляем отображение полей (используем правильные названия полей)
-                    document.getElementById('firstName').textContent = userData.first_name || 'Не указано';
-                    document.getElementById('lastName').textContent = userData.last_name || 'Не указано';
+                    document.getElementById('firstName').textContent = userData.first_name || user.first_name || 'Не указано';
+                    document.getElementById('lastName').textContent = userData.last_name || user.last_name || 'Не указано';
                     document.getElementById('phone').textContent = userData.phone || 'Не указан';
+                } else {
+                    // Fallback: показываем базовую информацию из Telegram данных
+                    console.log('⚠️ No API data, using Telegram user data only');
+                    document.getElementById('payment').value = '';
+                    document.getElementById('notes').value = '';
                 }
                 showLoading(false);
             } catch (error) {
