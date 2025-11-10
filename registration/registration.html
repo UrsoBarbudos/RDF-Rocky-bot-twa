@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Запрос доступа</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const API_URL = 'https://rocky-bot-api.egordkd.workers.dev';
+        const tg = window.Telegram.WebApp;
+
+        async function submitRegistration() {
+            const user = tg.initDataUnsafe?.user;
+            if (!user) {
+                tg.showAlert('Ошибка: не удалось получить данные пользователя');
+                return;
+            }
+
+            const url = `${API_URL}/registration`;
+            
+            try {
+                tg.MainButton.showProgress();
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': tg.initData
+                    },
+                    body: JSON.stringify({
+                        chat_id: user.id,
+                        username: user.username || '',
+                        first_name: user.first_name || '',
+                        last_name: user.last_name || ''
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Ошибка отправки заявки');
+                }
+
+                // Успешно отправлено
+                tg.showAlert('✅ Заявка отправлена!\n\nАдминистратор получил ваш запрос.\nМы уведомим вас, когда доступ будет одобрен.', () => {
+                    tg.close();
+                });
+
+            } catch (error) {
+                console.error('Registration error:', error);
+                document.getElementById('error').textContent = error.message;
+                document.getElementById('error').style.display = 'block';
+            } finally {
+                tg.MainButton.hideProgress();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            tg.ready();
+            tg.expand();
+
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById('userId').textContent = user.id;
+                document.getElementById('username').textContent = user.username ? `@${user.username}` : 'Не указан';
+                
+                const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+                if (fullName) {
+                    document.getElementById('fullName').textContent = fullName;
+                    document.getElementById('fullNameContainer').style.display = 'block';
+                }
+            }
+
+            tg.MainButton.setText('📝 Отправить заявку');
+            tg.MainButton.show();
+            tg.MainButton.onClick(submitRegistration);
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999999);
+            line-height: 1.4;
+        }
+
+        .info-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--tg-theme-section-separator-color, rgba(0,0,0,0.1));
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999999);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-value {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--tg-theme-text-color, #000000);
+            text-align: right;
+        }
+
+        .check-icon {
+            color: #4CAF50;
+            font-size: 18px;
+        }
+
+        .notice {
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 3px solid #4CAF50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .notice p {
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        #error {
+            display: none;
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .spacer {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-icon">📝</div>
+        <h1>Заявка на доступ</h1>
+        <p class="subtitle">Ваши данные будут отправлены администратору для подтверждения</p>
+    </div>
+
+    <div class="info-card">
+        <div class="info-row" id="fullNameContainer" style="display: none;">
+            <div class="info-label">
+                <span class="check-icon">✅</span>
+                <span>Имя</span>
+            </div>
+            <div class="info-value" id="fullName"></div>
+        </div>
+        
+        <div class="info-row">
+            <div class="info-label">
+                <span class="check-icon">✅</span>
+                <span>Telegram ID</span>
+            </div>
+            <div class="info-value" id="userId"></div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">
+                <span class="check-icon">✅</span>
+                <span>Username</span>
+            </div>
+            <div class="info-value" id="username"></div>
+        </div>
+    </div>
+
+    <div class="notice">
+        <p><strong>Что дальше?</strong></p>
+        <p>После отправки администратор рассмотрит вашу заявку. Вы получите уведомление о результате.</p>
+    </div>
+
+    <div id="error"></div>
+
+    <div class="spacer"></div>
+</body>
+</html>

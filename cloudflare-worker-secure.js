@@ -316,6 +316,201 @@ export default {
         });
       }
 
+      // POST /registration - Регистрация нового пользователя
+      if (request.method === 'POST' && path === '/registration') {
+        console.log('POST /registration - New user registration');
+        
+        const body = await request.json();
+        const { chat_id, username, first_name, last_name } = body;
+        
+        if (!chat_id) {
+          return new Response(JSON.stringify({ 
+            error: 'Bad Request',
+            message: 'chat_id is required' 
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        // Проверяем, есть ли уже запись в Whitelist
+        const checkUrl = `https://api.airtable.com/v0/${env.BASE_ID}/Whitelist?filterByFormula={Chat ID}='${chat_id}'`;
+        const checkResponse = await fetch(checkUrl, {
+          headers: {
+            'Authorization': `Bearer ${env.AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!checkResponse.ok) {
+          return new Response(JSON.stringify({ 
+            error: 'Airtable Error',
+            message: 'Failed to check existing registration' 
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const checkData = await checkResponse.json();
+        
+        // Если запись уже существует
+        if (checkData.records && checkData.records.length > 0) {
+          const existingStatus = checkData.records[0].fields['Status'];
+          return new Response(JSON.stringify({ 
+            error: 'Already Registered',
+            message: `Ваша заявка уже существует со статусом: ${existingStatus}`,
+            status: existingStatus
+          }), {
+            status: 409,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        // Создаем новую запись в Whitelist
+        const createUrl = `https://api.airtable.com/v0/${env.BASE_ID}/Whitelist`;
+        
+        const createResponse = await fetch(createUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${env.AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fields: {
+              'Chat ID': String(chat_id),
+              'Username': username || '',
+              'Status': 'Pending'
+            }
+          })
+        });
+
+        if (!createResponse.ok) {
+          const errorText = await createResponse.text();
+          console.error('Failed to create Whitelist record:', errorText);
+          return new Response(JSON.stringify({ 
+            error: 'Airtable Error',
+            message: 'Failed to create registration request' 
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const createdRecord = await createResponse.json();
+        console.log('Whitelist record created:', createdRecord.id);
+
+        // Отправляем уведомление админу
+        const fullName = [first_name, last_name].filter(n => n).join(' ') || 'Не указано';
+        const notificationText = `🔔 *Новая заявка на регистрацию*\n\n` +
+          `👤 *Пользователь:* ${fullName}\n` +
+          `🆔 *ID:* \`${chat_id}\`\n` +
+          `📝 *Username:* @${username || 'не указан'}\n\n` +
+          `Одобрить или отклонить заявку?`;
+
+        const adminChatId = '182719187'; // Ваш chat_id
+        const telegramUrl = `https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`;
+        
+        await fetch(telegramUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: adminChatId,
+            text: notificationText,
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [[
+                { text: '✅ Одобрить', callback_data: `approve_${chat_id}_${createdRecord.id}` },
+                { text: '❌ Отклонить', callback_data: `reject_${chat_id}_${createdRecord.id}` }
+              ]]
+            }
+          })
+        });
+
+        return new Response(JSON.stringify({ 
+          success: true,
+          message: 'Заявка успешно отправлена! Ожидайте одобрения администратора.',
+          recordId: createdRecord.id
+        }), {
+          status: 201,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // POST /registration/approve - Одобрение/отклонение заявки
+      if (request.method === 'POST' && path === '/registration/approve') {
+        console.log('POST /registration/approve - Admin approval');
+        
+        const body = await request.json();
+        const { chat_id, record_id, action, admin_id } = body;
+        
+        if (!chat_id || !record_id || !action) {
+          return new Response(JSON.stringify({ 
+            error: 'Bad Request',
+            message: 'chat_id, record_id and action are required' 
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        // Определяем новый статус
+        const newStatus = action === 'approve' ? 'Approved' : 'Blocked';
+
+        // Обновляем запись в Whitelist
+        const updateUrl = `https://api.airtable.com/v0/${env.BASE_ID}/Whitelist/${record_id}`;
+        const updateFields = {
+          'Status': newStatus
+        };
+
+        const updateResponse = await fetch(updateUrl, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${env.AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ fields: updateFields })
+        });
+
+        if (!updateResponse.ok) {
+          const errorText = await updateResponse.text();
+          console.error('Failed to update Whitelist record:', errorText);
+          return new Response(JSON.stringify({ 
+            error: 'Airtable Error',
+            message: 'Failed to update registration status' 
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const updatedRecord = await updateResponse.json();
+        console.log('Whitelist record updated:', updatedRecord.id, 'Status:', newStatus);
+
+        // Отправляем уведомление пользователю
+        const userMessage = action === 'approve' 
+          ? '✅ Ваша заявка одобрена! Теперь вы можете пользоваться ботом.' 
+          : '❌ Ваша заявка отклонена администратором.';
+
+        const telegramUrl = `https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`;
+        await fetch(telegramUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chat_id,
+            text: userMessage
+          })
+        });
+
+        return new Response(JSON.stringify({ 
+          success: true,
+          message: `Registration ${action === 'approve' ? 'approved' : 'rejected'}`,
+          status: newStatus
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
       // 404 для остальных путей
       console.log('404 - Path not found:', path);
       return new Response(JSON.stringify({ 

@@ -2,6 +2,8 @@
 
 Полный план реализации проекта Rocky RDF Bot с Telegram Web Apps.
 
+> 🗺️ **Ищете что-то конкретное?** Используйте **[PROJECT_GUIDE.md](PROJECT_GUIDE.md)** для навигации по документации!
+
 ---
 
 ## ✅ Фаза 0: Подготовка рабочего места
@@ -58,11 +60,29 @@
 - [x] Реализовать Rate Limiting с Cloudflare KV
 - [x] Обновить profile.html для отправки initData
 - [x] Создать документацию SECURITY_SETUP.md
-- [ ] **СЕЙЧАС:** Настроить переменные окружения в Cloudflare
-- [ ] **СЕЙЧАС:** Создать таблицу Whitelist и добавить себя
-- [ ] **СЕЙЧАС:** Протестировать систему безопасности
+- [x] Настроить переменные окружения в Cloudflare
+- [x] Создать таблицу Whitelist и добавить себя
+- [x] Протестировать систему безопасности ✅
 
 **📖 Инструкции:** См. файл `SECURITY_SETUP.md`
+
+### Шаг 1.6: 📝 Система регистрации новых пользователей
+- [x] Разработать архитектуру регистрации (Variant 3 - Combined)
+- [x] Создать `registration/registration.html` - форма заявки
+- [x] Добавить endpoint `POST /registration` в Worker
+- [x] Добавить endpoint `POST /registration/approve` в Worker
+- [x] Создать `bot-callback-handler.js` - обработка callback кнопок
+- [x] Создать документацию `REGISTRATION_DEPLOY.md`
+- [x] Создать чек-лист деплоя `NEXT_STEPS.md`
+- [ ] **СЕЙЧАС:** Обновить структуру Whitelist в Airtable (добавить поля: Request Date, Approved Date, Approved By)
+- [ ] **СЕЙЧАС:** Деплой обновлённого `cloudflare-worker-secure.js`
+- [ ] **СЕЙЧАС:** Деплой `bot-callback-handler.js` и настройка webhook
+- [ ] **СЕЙЧАС:** Загрузить `registration.html` на GitHub Pages
+- [ ] **СЕЙЧАС:** Протестировать полный flow регистрации
+
+**📖 Инструкции:** См. файлы `REGISTRATION_DEPLOY.md` и `NEXT_STEPS.md`
+
+**✅ Статус:** Код готов, требуется деплой
 
 ---
 
@@ -309,4 +329,11 @@
 
 **Последнее обновление:** 10 ноября 2025 г.
 
-**Текущий фокус:** Фаза 2, Сценарий 2 (Интерактивный вызывной лист)
+**Текущий фокус:** Фаза 1, Шаг 1.6 (Система регистрации - готова к деплою)
+
+**Готовые файлы для деплоя:**
+- `registration/registration.html` - форма регистрации
+- `cloudflare-worker-secure.js` - обновлён с endpoints `/registration` и `/registration/approve`
+- `bot-callback-handler.js` - новый Worker для обработки callback кнопок
+- `REGISTRATION_DEPLOY.md` - подробная инструкция по деплою
+- `NEXT_STEPS.md` - краткий чек-лист (17 минут на деплой)
