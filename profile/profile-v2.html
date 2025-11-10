@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Профиль пользователя v2.1</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        // --- НАСТРОЙКИ API ---
+        const API_URL = 'https://rocky-bot-api.egordkd.workers.dev';
+        const tg = window.Telegram.WebApp;
+
+        // --- API ЛОГИКА ---
+        async function loadUserProfile(chatId) {
+            const url = `${API_URL}/api/profile?chat_id=${chatId}`;
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Telegram-Init-Data': tg.initData,
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    
+                    // Если пользователь не зарегистрирован, перенаправляем на регистрацию
+                    if (response.status === 404 && errorData.redirect === 'registration') {
+                        window.location.href = '../registration/registration.html';
+                        return;
+                    }
+                    
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data || {};
+            } catch (error) {
+                console.error("Error loading user profile:", error);
+                throw error;
+            }
+        }
+
+        async function saveUserProfile(chatId, userData) {
+            const url = `${API_URL}/api/profile`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': tg.initData
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        ...userData
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error("Error saving user profile:", error);
+                throw error;
+            }
+        }
+
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            tg.ready();
+            tg.expand();
+
+            const form = document.getElementById('profileForm');
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+
+            function showLoading(show) {
+                loadingEl.style.display = show ? 'block' : 'none';
+                form.style.display = show ? 'none' : 'block';
+            }
+
+            function showError(message) {
+                if (message) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = 'block';
+                } else {
+                    errorEl.style.display = 'none';
+                }
+            }
+
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById('userId').textContent = user.id;
+                
+                // Простое отображение username
+                let displayUsername = user.username || 'Не указан';
+                if (displayUsername !== 'Не указан' && !displayUsername.startsWith('@')) {
+                    displayUsername = '@' + displayUsername;
+                }
+                document.getElementById('username').textContent = displayUsername;
+                
+                // Инициализируем остальные поля
+                document.getElementById('firstName').textContent = user.first_name || 'Не указано';
+                document.getElementById('lastName').textContent = user.last_name || 'Не указано';
+                document.getElementById('phone').textContent = 'Не указан';
+            }
+
+            tg.MainButton.setText('💾 Сохранить изменения');
+            tg.MainButton.show();
+
+            showLoading(true);
+            showError('');
+
+            try {
+                const userProfileData = await loadUserProfile(user.id);
+
+                if (userProfileData && userProfileData.success && userProfileData.user) {
+                    // Существующий пользователь с данными
+                    const userData = userProfileData.user;
+                    
+                    console.log('API Response:', userData);
+                    
+                    document.getElementById('payment').value = userData.payment_info || '';
+                    document.getElementById('notes').value = userData.notes || '';
+                    
+                    // Обновляем отображение пользователя (API уже нормализует данные)
+                    document.getElementById('userId').textContent = userData.chat_id;
+                    document.getElementById('username').textContent = userData.username || 'Не указан';
+                    
+                    // Добавляем отображение полей (используем правильные названия полей)
+                    document.getElementById('firstName').textContent = userData.first_name || 'Не указано';
+                    document.getElementById('lastName').textContent = userData.last_name || 'Не указано';
+                    document.getElementById('phone').textContent = userData.phone || 'Не указан';
+                }
+                showLoading(false);
+            } catch (error) {
+                console.error(error);
+                
+                // Показываем сообщение об ошибке и скрываем форму
+                const errorMessage = error.message || 'Не удалось загрузить данные профиля. Попробуйте позже.';
+                showError(errorMessage);
+                
+                // Скрываем форму и кнопку при ошибке доступа
+                loadingEl.style.display = 'none';
+                form.style.display = 'none';
+                tg.MainButton.hide();
+            }
+        });
+
+        tg.MainButton.onClick(async () => {
+            const form = document.getElementById('profileForm');
+            const errorEl = document.getElementById('error');
+            
+            function showError(message) {
+                if (message) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = 'block';
+                } else {
+                    errorEl.style.display = 'none';
+                }
+            }
+
+            tg.MainButton.showProgress();
+            showError('');
+
+            const userData = {
+                payment_info: document.getElementById('payment').value,
+                notes: document.getElementById('notes').value
+            };
+
+            try {
+                const result = await saveUserProfile(tg.initDataUnsafe.user.id, userData);
+                if (result && result.success) {
+                    tg.showAlert('✅ Профиль успешно сохранен!', () => {
+                        tg.close();
+                    });
+                } else {
+                    throw new Error(result.message || "Save operation failed");
+                }
+            } catch (error) {
+                console.error(error);
+                showError('Не удалось сохранить данные. Попробуйте снова.');
+            } finally {
+                tg.MainButton.hideProgress();
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 8px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #3390ec);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-top: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+
+        .error {
+            background-color: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .info-block {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-block p {
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 4px;
+        }
+
+        .info-block p:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👤 Мой профиль</h1>
+        
+        <div id="error" class="error"></div>
+        <div id="loading" class="loading">Загрузка данных...</div>
+        
+        <form id="profileForm" style="display: none;">
+            <div class="info-block">
+                <p><strong>ID:</strong> <span id="userId"></span></p>
+                <p><strong>Username:</strong> <span id="username"></span></p>
+                <p><strong>Имя:</strong> <span id="firstName"></span></p>
+                <p><strong>Фамилия:</strong> <span id="lastName"></span></p>
+                <p><strong>Телефон:</strong> <span id="phone"></span></p>
+            </div>
+
+            <div class="form-group">
+                <label for="payment">💳 Платежные реквизиты</label>
+                <textarea id="payment" name="payment" placeholder="Номер карты, СБП или другие реквизиты"></textarea>
+                <div class="hint">Укажите реквизиты для получения оплаты</div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">📝 Примечание</label>
+                <textarea id="notes" name="notes" placeholder="Дополнительная информация"></textarea>
+                <div class="hint">Любая дополнительная информация о вас</div>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -90,6 +90,24 @@ class AirtableAPI {
   }
 }
 
+// Функция для нормализации username
+function normalizeUsername(username) {
+  if (!username) return '';
+  
+  // Убираем лишние пробелы
+  const cleaned = username.trim();
+  
+  // Убираем множественные @ в начале и приводим к одному @
+  const normalized = cleaned.replace(/^@+/, '@');
+  
+  // Если нет @ в начале, добавляем
+  if (normalized && !normalized.startsWith('@')) {
+    return '@' + normalized;
+  }
+  
+  return normalized;
+}
+
 // Проверка доступа пользователя
 async function checkUserAccess(chatId, airtable) {
   try {
@@ -200,7 +218,7 @@ export default {
           user: {
             id: accessCheck.user.id,
             chat_id: userFields.chat_id,
-            username: userFields['@username'] || '',
+            username: normalizeUsername(userFields['@username']),
             first_name: userFields.FirstName || '',
             last_name: userFields.LastName || '',
             payment_info: userFields['Платежные данные'] || '',
