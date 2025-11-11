@@ -271,16 +271,46 @@
                 userId = user.id;
                 console.log('✅ Пользователь из Telegram WebApp:', user);
             } else {
-                // Fallback - используем фиксированный ID для тестирования
-                console.log('⚠️ Нет данных пользователя из Telegram, используем фиксированный ID');
-                userId = 182719187; // Ваш реальный chat_id
-                user = {
-                    id: userId,
-                    first_name: "Егор", // Из API
-                    last_name: "Никитин", // Из API
-                    username: "urso_barbudos"
-                };
-                showError('⚠️ Режим разработки: используется фиксированный пользователь');
+                // Проверяем, не localhost ли это (для разработки)
+                const isDevelopment = window.location.hostname === 'localhost' || 
+                                    window.location.hostname === '127.0.0.1' ||
+                                    window.location.protocol === 'file:';
+                
+                if (isDevelopment) {
+                    // ТОЛЬКО для разработки на localhost
+                    console.log('🔧 РЕЖИМ РАЗРАБОТКИ: используем тестового пользователя');
+                    userId = 182719187;
+                    user = {
+                        id: userId,
+                        first_name: "Егор",
+                        last_name: "Никитин", 
+                        username: "urso_barbudos"
+                    };
+                    showError('🔧 Режим разработки (только localhost)');
+                } else {
+                    // БЕЗОПАСНОСТЬ: Блокируем доступ на production
+                    console.error('❌ ДОСТУП ЗАБЛОКИРОВАН: Нет данных пользователя из Telegram');
+                
+                showError('🚫 Доступ запрещен: Приложение должно быть открыто через Telegram бот');
+                showLoading(false);
+                form.style.display = 'none';
+                
+                // Скрываем все элементы интерфейса
+                document.getElementById('userSummary').innerHTML = '🚫 Неавторизованный доступ';
+                
+                // Показываем инструкцию
+                const instructionDiv = document.createElement('div');
+                instructionDiv.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #ff4757;">
+                        <h3>🤖 Доступ только через Telegram</h3>
+                        <p>Это приложение работает только внутри Telegram.</p>
+                        <p>Откройте бот <strong>@Rocky_RDF_Admin</strong> в Telegram и используйте Menu Button.</p>
+                    </div>
+                `;
+                document.querySelector('.container').appendChild(instructionDiv);
+                
+                return; // Прерываем выполнение
+                }
             }
             
             console.log('👤 Итоговые данные пользователя:', { user, userId });
