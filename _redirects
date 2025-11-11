@@ -1,15 +1,16 @@
 # Cloudflare Pages redirects
 
-# Root redirect to main index.html
+# Rocky Bot Web App Redirects
+
+# Отключаем автоматические "чистые URL" для profile.html (приоритет с !)
+/profile/profile.html  /profile/profile.html  200!
+
+# Главная страница
 /  /index.html  200
 
-# Profile redirects to new location
+# Прямой доступ к профилю (без .html)
 /profile  /profile/profile.html  200
 /profile/  /profile/profile.html  200
 
-# Fallback для неизвестных путей
-/admin/*  /index.html  200
-/api/*  /index.html  200
-
-# Catch-all fallback
+# Fallback для всех остальных путей
 /*  /index.html  200
