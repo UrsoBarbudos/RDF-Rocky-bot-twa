@@ -86,7 +86,7 @@
 
             // UI функции
             function showLoading(show) {
-                loadingEl.style.display = show ? 'block' : 'none';
+                loadingEl.style.display = show ? 'flex' : 'none';
                 form.style.display = show ? 'none' : 'block';
             }
 
@@ -101,9 +101,8 @@
 
             const user = tg.initDataUnsafe?.user;
             if (user) {
-                document.getElementById('userId').textContent = user.id;
-                
-                // Правильно отображаем username
+                // Обновляем заголовок с именем пользователя
+                const userName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Пользователь';
                 let displayUsername = user.username || 'Не указан';
                 if (displayUsername !== 'Не указан') {
                     displayUsername = displayUsername.trim();
@@ -111,9 +110,11 @@
                         displayUsername = '@' + displayUsername;
                     }
                 }
-                document.getElementById('username').textContent = displayUsername;
+                document.getElementById('userSummary').innerHTML = `${userName}<br>${displayUsername}`;
                 
-                // Инициализируем остальные поля
+                // Заполняем поля информации
+                document.getElementById('userId').textContent = user.id;
+                document.getElementById('username').textContent = displayUsername;
                 document.getElementById('firstName').textContent = user.first_name || 'Не указано';
                 document.getElementById('lastName').textContent = user.last_name || 'Не указано';
                 document.getElementById('phone').textContent = 'Не указан';
@@ -158,6 +159,10 @@
                     }
                     console.log('Final displayUsername:', JSON.stringify(displayUsername));
                     document.getElementById('username').textContent = displayUsername;
+                    
+                    // Обновляем заголовок с реальными данными
+                    const userName = `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 'Пользователь';
+                    document.getElementById('userSummary').innerHTML = `${userName}<br>${displayUsername}`;
                     
                     // Добавляем отображение новых полей
                     document.getElementById('firstName').textContent = userData.first_name || 'Не указано';
@@ -225,53 +230,72 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 400px;
             margin: 0 auto;
         }
 
-        h1 {
-            font-size: 24px;
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
             font-weight: 600;
-            margin-bottom: 20px;
-            color: var(--tg-theme-text-color, #000000);
+            margin-bottom: 10px;
+        }
+
+        .user-summary {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .widget {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .widget h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         label {
             display: block;
-            font-size: 14px;
-            font-weight: 500;
             margin-bottom: 8px;
-            color: var(--tg-theme-text-color, #000000);
+            font-weight: 600;
+            color: #333;
         }
 
-        input[type="text"],
-        input[type="tel"],
-        textarea {
+        input, textarea {
             width: 100%;
             padding: 12px;
-            font-size: 16px;
-            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border: 2px solid #e1e5e9;
             border-radius: 8px;
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            font-size: 16px;
             transition: border-color 0.3s;
         }
 
-        input:focus,
-        textarea:focus {
+        input:focus, textarea:focus {
             outline: none;
-            border-color: var(--tg-theme-button-color, #3390ec);
+            border-color: #667eea;
         }
 
         textarea {
@@ -282,66 +306,111 @@
 
         .hint {
             font-size: 12px;
-            color: var(--tg-theme-hint-color, #999);
+            color: #666;
             margin-top: 4px;
         }
 
         .loading {
-            text-align: center;
-            padding: 20px;
-            color: var(--tg-theme-hint-color, #999);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: white;
+            font-size: 18px;
         }
 
         .error {
-            background-color: #fee;
-            color: #c00;
-            padding: 12px;
+            background: #ff4757;
+            color: white;
+            padding: 16px;
             border-radius: 8px;
             margin-bottom: 20px;
+            text-align: center;
             display: none;
         }
 
-        .info-block {
-            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
         }
 
-        .info-block p {
-            font-size: 14px;
-            line-height: 1.5;
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .info-value {
+            color: #333;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>👤 Мой профиль</h1>
+        <div class="header">
+            <h1>👤 Профиль пользователя</h1>
+            <div class="user-summary" id="userSummary">Загрузка...</div>
+        </div>
         
+        <div id="loading" class="loading">
+            🔄 Загрузка данных профиля...
+        </div>
+
         <div id="error" class="error"></div>
-        <div id="loading" class="loading">Загрузка данных...</div>
         
         <form id="profileForm" style="display: none;">
-            <div class="info-block">
-                <p><strong>ID:</strong> <span id="userId"></span></p>
-                <p><strong>Username:</strong> <span id="username"></span></p>
-                <p><strong>Имя:</strong> <span id="firstName"></span></p>
-                <p><strong>Фамилия:</strong> <span id="lastName"></span></p>
-                <p><strong>Телефон:</strong> <span id="phone"></span></p>
+            <!-- Основная информация -->
+            <div class="widget">
+                <h3>📋 Основная информация</h3>
+                <div class="info-row">
+                    <span class="info-label">ID:</span>
+                    <span class="info-value" id="userId">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Имя:</span>
+                    <span class="info-value" id="firstName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Фамилия:</span>
+                    <span class="info-value" id="lastName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Username:</span>
+                    <span class="info-value" id="username">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Телефон:</span>
+                    <span class="info-value" id="phone">-</span>
+                </div>
             </div>
 
-
-
-            <div class="form-group">
-                <label for="payment">💳 Платежные реквизиты</label>
-                <textarea id="payment" name="payment" placeholder="Номер карты, СБП или другие реквизиты"></textarea>
-                <div class="hint">Укажите реквизиты для получения оплаты</div>
+            <!-- Редактируемые поля -->
+            <div class="widget">
+                <h3>💳 Платежные реквизиты</h3>
+                <div class="form-group">
+                    <label for="payment">Реквизиты для оплаты:</label>
+                    <textarea 
+                        id="payment" 
+                        name="payment" 
+                        rows="4" 
+                        placeholder="Укажите номер карты, банк и ФИО держателя карты"
+                    ></textarea>
+                    <div class="hint">Укажите реквизиты для получения оплаты</div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="notes">📝 Примечание</label>
-                <textarea id="notes" name="notes" placeholder="Дополнительная информация"></textarea>
-                <div class="hint">Любая дополнительная информация о вас</div>
+            <div class="widget">
+                <h3>📝 Дополнительная информация</h3>
+                <div class="form-group">
+                    <label for="notes">Заметки:</label>
+                    <textarea 
+                        id="notes" 
+                        name="notes" 
+                        rows="4" 
+                        placeholder="Дополнительная информация о предпочтениях, графике работы и т.д."
+                    ></textarea>
+                    <div class="hint">Любая дополнительная информация о вас</div>
+                </div>
             </div>
         </form>
     </div>
