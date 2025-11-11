@@ -4,5 +4,5 @@
 /profile  /profile/profile.html  200
 /registration  /registration/registration.html  200
 
-# Error pages
-/404.html  /index.html  404
+# Fallback for 404 errors (используем 200 вместо 404)
+/*  /index.html  200

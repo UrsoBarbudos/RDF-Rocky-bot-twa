@@ -1,34 +1,6 @@
-{
-  "version": 1,
-  "deployment": {
-    "framework": "static",
-    "build": {
-      "command": "",
-      "directory": ".",
-      "environment": {}
-    }
-  },
-  "preview": {
-    "alias": ["rdf-rocky-bot-preview"]
-  },
-  "headers": [
-    {
-      "source": "**/*.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "**/*.(js|css)",
-      "headers": [
-        {
-          "key": "Cache-Control", 
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    }
-  ]
-}
+# Конфигурация для Cloudflare Pages
+name = "rdf-rocky-bot-twa"
+compatibility_date = "2023-11-11"
+
+# Для Pages проекта достаточно базовой конфигурации
+pages_build_output_dir = "."
