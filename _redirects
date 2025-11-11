@@ -1,8 +1,8 @@
 # Cloudflare Pages redirects
 
-# Root redirect to index
+# Root redirect to profile
+/  /profile/profile.html  200
 /profile  /profile/profile.html  200
-/registration  /registration/registration.html  200
 
-# Fallback for 404 errors (используем 200 вместо 404)
-/*  /index.html  200
+# Fallback - все неизвестные пути ведут к профилю
+/*  /profile/profile.html  200

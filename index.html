@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rocky Bot - Web App</title>
+    <title>Rocky Bot - Profile</title>
+    <script>
+        // Автоматическое перенаправление на профиль
+        window.location.href = '/profile/profile.html';
+    </script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
@@ -11,53 +15,19 @@
             padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            text-align: center;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-        }
-        .container {
-            text-align: center;
-            max-width: 400px;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-        .links {
-            background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 12px;
-            margin: 20px 0;
-        }
-        a {
-            display: block;
-            color: white;
-            text-decoration: none;
-            padding: 10px;
-            margin: 10px 0;
-            background: rgba(255,255,255,0.2);
-            border-radius: 8px;
-            transition: background 0.3s;
-        }
-        a:hover {
-            background: rgba(255,255,255,0.3);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🤖 Rocky Bot Web App</h1>
-        <div class="links">
-            <h3>Доступные страницы:</h3>
-            <a href="/profile/profile.html">👤 Профиль пользователя</a>
-            <a href="/registration/registration.html">📝 Регистрация</a>
-        </div>
-        <div class="links">
-            <h3>🚀 Powered by Cloudflare Pages</h3>
-            <p>Сверхбыстрая загрузка с глобальным CDN</p>
-        </div>
-        <p>Статус: Активен ✅</p>
+    <div>
+        <h1>🤖 Rocky Bot</h1>
+        <p>Перенаправление на профиль...</p>
+        <p><a href="/profile/profile.html" style="color: white;">Нажмите здесь, если перенаправление не работает</a></p>
     </div>
 </body>
 </html>
