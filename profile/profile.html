@@ -17,6 +17,47 @@
         let tg = null;
         let saveCallback = null;
 
+        // --- ДИАГНОСТИКА TELEGRAM WEBAPP ---
+        function diagnoseTelegramWebApp() {
+            console.log('🔍 === ДИАГНОСТИКА TELEGRAM WEBAPP ===');
+            
+            // Проверяем window.Telegram
+            console.log('window.Telegram exists:', !!window.Telegram);
+            if (window.Telegram) {
+                console.log('window.Telegram.WebApp exists:', !!window.Telegram.WebApp);
+            }
+            
+            // Проверяем глобальную переменную tg
+            console.log('Global tg variable:', tg);
+            
+            if (tg) {
+                console.log('tg.initData exists:', !!tg.initData);
+                console.log('tg.initData length:', tg.initData ? tg.initData.length : 0);
+                console.log('tg.initDataUnsafe exists:', !!tg.initDataUnsafe);
+                console.log('tg.initDataUnsafe:', tg.initDataUnsafe);
+                console.log('tg.version:', tg.version);
+                console.log('tg.platform:', tg.platform);
+                console.log('tg.colorScheme:', tg.colorScheme);
+                console.log('tg.isExpanded:', tg.isExpanded);
+                console.log('tg.viewportHeight:', tg.viewportHeight);
+                
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    console.log('User data from tg.initDataUnsafe.user:', tg.initDataUnsafe.user);
+                } else {
+                    console.log('❌ NO USER DATA in tg.initDataUnsafe');
+                }
+            }
+            
+            // Проверяем User Agent
+            console.log('User Agent:', navigator.userAgent);
+            
+            // Проверяем, запущено ли в Telegram
+            const isTelegramApp = navigator.userAgent.includes('Telegram');
+            console.log('Running in Telegram app:', isTelegramApp);
+            
+            console.log('🔍 === КОНЕЦ ДИАГНОСТИКИ ===');
+        }
+
         // --- ИНИЦИАЛИЗАЦИЯ ---
         function initializeTelegram() {
             console.log('🚀 Initializing Telegram WebApp...');
@@ -25,6 +66,9 @@
             if (window.Telegram && window.Telegram.WebApp) {
                 tg = window.Telegram.WebApp;
                 console.log('✅ Telegram WebApp available');
+                
+                // Запускаем диагностику
+                diagnoseTelegramWebApp();
                 
                 tg.ready();
                 tg.expand();
@@ -36,6 +80,9 @@
                 return true;
             } else {
                 console.log('⚠️ Telegram WebApp not available, using fallback');
+                
+                // Все равно запускаем диагностику
+                diagnoseTelegramWebApp();
                 
                 // Показываем тестовую кнопку для отладки
                 const testButton = document.getElementById('testSaveButton');
@@ -50,8 +97,9 @@
 
         // --- API ФУНКЦИИ ---
         async function loadUserProfile(chatId) {
-            // Включаем тестовый режим если нет реального API
-            const TEST_MODE = !tg || !tg.initData;
+            // ВРЕМЕННО: Всегда используем реальный API (без проверки initData)
+            // const TEST_MODE = !tg || !tg.initData;
+            const TEST_MODE = false; // Принудительно отключаем тестовый режим
             
             if (TEST_MODE) {
                 console.log('🧪 TEST MODE: returning mock data');
@@ -76,11 +124,17 @@
             const url = `${API_URL}/api/profile?chat_id=${chatId}`;
 
             try {
+                const headers = {
+                    'Cache-Control': 'no-cache'
+                };
+                
+                // Добавляем initData только если он существует
+                if (tg && tg.initData) {
+                    headers['X-Telegram-Init-Data'] = tg.initData;
+                }
+                
                 const response = await fetch(url, {
-                    headers: {
-                        'X-Telegram-Init-Data': tg.initData,
-                        'Cache-Control': 'no-cache'
-                    }
+                    headers: headers
                 });
                 
                 if (!response.ok) {
@@ -103,8 +157,9 @@
         }
 
         async function saveUserProfile(chatId, userData) {
-            // Тестовый режим
-            const TEST_MODE = !tg || !tg.initData;
+            // ВРЕМЕННО: Всегда используем реальный API
+            // const TEST_MODE = !tg || !tg.initData;
+            const TEST_MODE = false; // Принудительно отключаем тестовый режим
             
             if (TEST_MODE) {
                 console.log('🧪 TEST MODE: simulating save');
@@ -118,12 +173,18 @@
             const url = `${API_URL}/api/profile`;
 
             try {
+                const headers = { 
+                    'Content-Type': 'application/json'
+                };
+                
+                // Добавляем initData только если он существует
+                if (tg && tg.initData) {
+                    headers['X-Telegram-Init-Data'] = tg.initData;
+                }
+                
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-Telegram-Init-Data': tg.initData
-                    },
+                    headers: headers,
                     body: JSON.stringify({
                         chat_id: chatId,
                         payment_info: userData.payment_info,
@@ -172,11 +233,11 @@
 
         // --- ЛОГИКА СТРАНИЦЫ ---
         document.addEventListener('DOMContentLoaded', async () => {
-            // Безопасная инициализация Telegram WebApp
-            if (tg && typeof tg.ready === 'function') {
-                tg.ready();
-                tg.expand();
-            }
+            // Правильная инициализация Telegram WebApp
+            console.log('📱 DOMContentLoaded - начинаем инициализацию...');
+            
+            // Вызываем нашу функцию инициализации
+            const telegramAvailable = initializeTelegram();
 
             // Инициализация элементов после загрузки DOM
             const form = document.getElementById('profileForm');
@@ -198,27 +259,31 @@
                 }
             }
 
-            // Проверяем доступность Telegram WebApp
-            if (!tg) {
-                console.error('❌ Telegram WebApp не доступен');
-                // Временный fallback для тестирования
-                console.log('🔧 Используем тестовые данные для отладки');
-                const testUser = {
-                    id: 182719187,
-                    first_name: "Egor",
-                    last_name: "Nikitin", 
+            // Получаем данные пользователя с подробной диагностикой
+            let user = null;
+            let userId = null;
+            
+            console.log('🔍 Определяем пользователя...');
+            
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                // Реальные данные из Telegram
+                user = tg.initDataUnsafe.user;
+                userId = user.id;
+                console.log('✅ Пользователь из Telegram WebApp:', user);
+            } else {
+                // Fallback - используем фиксированный ID для тестирования
+                console.log('⚠️ Нет данных пользователя из Telegram, используем фиксированный ID');
+                userId = 182719187; // Ваш реальный chat_id
+                user = {
+                    id: userId,
+                    first_name: "Егор", // Из API
+                    last_name: "Никитин", // Из API
                     username: "urso_barbudos"
                 };
-                showError('⚠️ Тестовый режим: данные загружены локально');
-                setTimeout(() => {
-                    populateUserData(testUser);
-                    showLoading(false);
-                }, 1000);
-                return;
+                showError('⚠️ Режим разработки: используется фиксированный пользователь');
             }
-
-            const user = tg.initDataUnsafe?.user;
-            console.log('👤 Telegram user data:', user);
+            
+            console.log('👤 Итоговые данные пользователя:', { user, userId });
             
             if (user) {
                 // Обновляем заголовок с именем пользователя
@@ -247,7 +312,8 @@
             showError('');
 
             try {
-                const userProfileData = await loadUserProfile(user.id);
+                console.log('📡 Загружаем профиль для пользователя:', userId);
+                const userProfileData = await loadUserProfile(userId);
 
                 if (userProfileData && userProfileData.success && userProfileData.user) {
                     // Существующий пользователь с данными
