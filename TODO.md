@@ -370,7 +370,7 @@
 
 ### 📊 **Развернуто в продакшене:**
 - ✅ **API:** `https://rocky-bot-api.egordkd.workers.dev` (Cloudflare Worker)
-- ✅ **Web App:** `https://ursobarbudos.github.io/RDF-Rocky-bot-twa/` (GitHub Pages)
+- ✅ **Web App:** `https://b1a59776.rdf-rocky-bot-twa.pages.dev/` (Cloudflare Pages)
 - ✅ **Bot:** `@Rocky_RDF_Admin` (Telegram Bot)
 - ✅ **Database:** Airtable "Пользователи" (единая таблица)
 - ✅ **Automation:** n8n workflow (полная обработка)

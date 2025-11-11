@@ -109,7 +109,7 @@ cd RDF-Rocky-bot-twa
 1. Перейдите в `Settings` → `Pages`
 2. Выберите ветку `main` и папку `/root`
 3. Нажмите `Save`
-4. Ваш сайт будет доступен по адресу: `https://username.github.io/RDF-Rocky-bot-twa/`
+4. Ваш сайт будет доступен по адресу: `https://b1a59776.rdf-rocky-bot-twa.pages.dev/` (Cloudflare Pages)
 
 ### 5. Обновление конфигурации
 
@@ -128,7 +128,7 @@ const API_URL = 'https://your-worker-name.your-subdomain.workers.dev';
 3. **Bot Settings** → **Menu Button** → **Configure menu button**
 4. Введите URL:
    ```
-   https://username.github.io/RDF-Rocky-bot-twa/profile/profile.html
+   https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/profile.html
    ```
 5. Название кнопки: `Мой профиль`
 
@@ -465,6 +465,6 @@ curl "https://rocky-bot-api.egordkd.workers.dev/api/profile?chat_id=182719187"
 
 ### 🚀 **Готово к использованию:**
 - **Bot:** @Rocky_RDF_Admin
-- **Web App:** https://ursobarbudos.github.io/RDF-Rocky-bot-twa/
+- **Web App:** https://b1a59776.rdf-rocky-bot-twa.pages.dev/ (Cloudflare Pages)
 - **API:** https://rocky-bot-api.egordkd.workers.dev
 - **Repository:** https://github.com/UrsoBarbudos/RDF-Rocky-bot-twa
