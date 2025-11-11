@@ -6,21 +6,73 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="3.0-new-design">
-    <title>Профиль пользователя v3.0 - New Design</title>
+    <meta name="version" content="3.1-fixed">
+    <title>Профиль пользователя v3.1 - Fixed</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <button id="testSaveButton" class="test-button">💾 Сохранить изменения</button>
+
     <script>
-        // --- НАСТРОЙКИ API ---
+        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
         const API_URL = 'https://rocky-bot-api.egordkd.workers.dev';
-        const tg = window.Telegram?.WebApp;
+        let tg = null;
+        let saveCallback = null;
 
-        // Отладочная информация
-        console.log('🚀 Profile page loaded');
-        console.log('📱 Telegram WebApp available:', !!tg);
-        console.log('🌐 Current URL:', window.location.href);
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        function initializeTelegram() {
+            console.log('🚀 Initializing Telegram WebApp...');
+            
+            // Проверяем доступность Telegram WebApp
+            if (window.Telegram && window.Telegram.WebApp) {
+                tg = window.Telegram.WebApp;
+                console.log('✅ Telegram WebApp available');
+                
+                tg.ready();
+                tg.expand();
+                
+                // Настраиваем MainButton
+                tg.MainButton.setText('💾 Сохранить изменения');
+                tg.MainButton.show();
+                
+                return true;
+            } else {
+                console.log('⚠️ Telegram WebApp not available, using fallback');
+                
+                // Показываем тестовую кнопку для отладки
+                const testButton = document.getElementById('testSaveButton');
+                testButton.style.display = 'block';
+                testButton.onclick = () => {
+                    if (saveCallback) saveCallback();
+                };
+                
+                return false;
+            }
+        }
 
-        // --- API ЛОГИКА ---
+        // --- API ФУНКЦИИ ---
         async function loadUserProfile(chatId) {
+            // Включаем тестовый режим если нет реального API
+            const TEST_MODE = !tg || !tg.initData;
+            
+            if (TEST_MODE) {
+                console.log('🧪 TEST MODE: returning mock data');
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve({
+                            success: true,
+                            user: {
+                                chat_id: 182719187,
+                                first_name: "Egor",
+                                last_name: "Nikitin",
+                                username: "urso_barbudos",
+                                phone: "+7 (999) 123-45-67",
+                                payment_info: "4111 1111 1111 1111\nСбербанк\nЕгор Никитин",
+                                notes: "Тестовые заметки о предпочтениях."
+                            }
+                        });
+                    }, 1000);
+                });
+            }
+
             const url = `${API_URL}/api/profile?chat_id=${chatId}`;
 
             try {
@@ -34,7 +86,6 @@
                 if (!response.ok) {
                     const errorData = await response.json();
                     
-                    // Если пользователь не зарегистрирован, перенаправляем на регистрацию
                     if (response.status === 404 && errorData.redirect === 'registration') {
                         window.location.href = '../registration/registration.html';
                         return;
@@ -52,6 +103,18 @@
         }
 
         async function saveUserProfile(chatId, userData) {
+            // Тестовый режим
+            const TEST_MODE = !tg || !tg.initData;
+            
+            if (TEST_MODE) {
+                console.log('🧪 TEST MODE: simulating save');
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve({ success: true, message: "Profile saved successfully (TEST)" });
+                    }, 1000);
+                });
+            }
+
             const url = `${API_URL}/api/profile`;
 
             try {
@@ -109,8 +172,11 @@
 
         // --- ЛОГИКА СТРАНИЦЫ ---
         document.addEventListener('DOMContentLoaded', async () => {
-            tg.ready();
-            tg.expand();
+            // Безопасная инициализация Telegram WebApp
+            if (tg && typeof tg.ready === 'function') {
+                tg.ready();
+                tg.expand();
+            }
 
             // Инициализация элементов после загрузки DOM
             const form = document.getElementById('profileForm');
@@ -396,6 +462,24 @@
 
         .info-value {
             color: #333;
+        }
+
+        /* Тестовая кнопка для отладки */
+        .test-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            display: none;
         }
     </style>
 </head>
