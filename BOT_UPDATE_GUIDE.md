@@ -24,7 +24,7 @@ Edit Commands
 profile - 👤 Мой профиль
 
 # Установите Web App URL:
-https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/
+https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/index.html
 ```
 
 ### 3. **Menu Button (если используется)**
@@ -56,8 +56,9 @@ Web App URL: https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/
 
 ## ✅ **Обновление завершено успешно!**
 
-✅ **Menu Button обновлен:** 11.11.2025 в 21:09
-✅ **Новая ссылка активна:** https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/profile.html
+✅ **Menu Button обновлен:** 11.11.2025 в 21:48  
+✅ **Проблема HTTP 308 решена:** 11.11.2025 в 21:50
+✅ **Финальная ссылка активна:** https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/index.html
 
 ### **Проверка работы:**
 1. Откройте бота в Telegram

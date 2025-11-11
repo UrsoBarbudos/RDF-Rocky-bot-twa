@@ -11,12 +11,16 @@
 - 💰 **Бесплатно:** Unlimited bandwidth
 - 🔄 **Auto Deploy:** Автоматический деплой при push в GitHub
 
-### 🔗 Новые ссылки для бота:
+## 🔗 **Финальные ссылки для бота:**
 ```
 Главная страница: https://b1a59776.rdf-rocky-bot-twa.pages.dev
-Профиль:          https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/profile.html  
-Регистрация:      https://b1a59776.rdf-rocky-bot-twa.pages.dev/registration/registration.html
+Профиль:          https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/index.html ✅
 ```
+
+## 🛠️ **Решенные проблемы:**
+- ❌ HTTP 308 редирект → ✅ HTTP 200 прямой доступ
+- ❌ Конфликт путей /profile → ✅ Чистая структура /profile/index.html
+- ❌ Load failed → ✅ Быстрая загрузка профиля
 
 ### 📋 TODO: Обновить ссылки в боте
 - [ ] Обновить URL в Telegram Bot
