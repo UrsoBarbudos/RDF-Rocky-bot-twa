@@ -2,7 +2,8 @@
 
 # Root redirect to profile
 /  /profile/profile.html  200
-/profile  /profile/profile.html  200
 
-# Fallback - все неизвестные пути ведут к профилю
-/*  /profile/profile.html  200
+# Fallback - все неизвестные пути кроме существующих файлов ведут к профилю  
+# НЕ перенаправляем /profile/ чтобы избежать конфликта
+/admin/*  /profile/profile.html  200
+/api/*  /profile/profile.html  200
