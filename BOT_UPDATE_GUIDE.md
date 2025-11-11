@@ -24,7 +24,7 @@ Edit Commands
 profile - 👤 Мой профиль
 
 # Установите Web App URL:
-https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/profile.html
+https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/
 ```
 
 ### 3. **Menu Button (если используется)**
@@ -38,7 +38,7 @@ Edit menu button
 
 # Установите:
 Text: 👤 Профиль
-Web App URL: https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/profile.html
+Web App URL: https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/
 ```
 
 ### 4. **Inline кнопки в коде (если есть)**
@@ -49,7 +49,7 @@ Web App URL: https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/profile.html
 {
   text: "👤 Открыть профиль",
   web_app: {
-    url: "https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/profile.html"
+    url: "https://b1a59776.rdf-rocky-bot-twa.pages.dev/profile/"
   }
 }
 ```

@@ -1,9 +1,8 @@
 # Cloudflare Pages redirects
 
-# Root redirect to profile
-/  /profile/profile.html  200
+# Root redirect to profile (теперь используем index.html в папке profile)
+/  /profile/  200
 
-# Fallback - все неизвестные пути кроме существующих файлов ведут к профилю  
-# НЕ перенаправляем /profile/ чтобы избежать конфликта
-/admin/*  /profile/profile.html  200
-/api/*  /profile/profile.html  200
+# Fallback для неизвестных путей
+/admin/*  /profile/  200
+/api/*  /profile/  200
