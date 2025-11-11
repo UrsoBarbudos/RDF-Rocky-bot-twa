@@ -12,7 +12,12 @@
     <script>
         // --- НАСТРОЙКИ API ---
         const API_URL = 'https://rocky-bot-api.egordkd.workers.dev';
-        const tg = window.Telegram.WebApp;
+        const tg = window.Telegram?.WebApp;
+
+        // Отладочная информация
+        console.log('🚀 Profile page loaded');
+        console.log('📱 Telegram WebApp available:', !!tg);
+        console.log('🌐 Current URL:', window.location.href);
 
         // --- API ЛОГИКА ---
         async function loadUserProfile(chatId) {
@@ -75,6 +80,33 @@
             }
         }
 
+        // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+        function populateUserData(user, profileData = null) {
+            // Обновляем заголовок с именем пользователя
+            const userName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Пользователь';
+            let displayUsername = user.username || 'Не указан';
+            if (displayUsername !== 'Не указан') {
+                displayUsername = displayUsername.trim();
+                if (!displayUsername.startsWith('@')) {
+                    displayUsername = '@' + displayUsername;
+                }
+            }
+            document.getElementById('userSummary').innerHTML = `${userName}<br>${displayUsername}`;
+            
+            // Заполняем поля информации
+            document.getElementById('userId').textContent = user.id;
+            document.getElementById('username').textContent = displayUsername;
+            document.getElementById('firstName').textContent = user.first_name || 'Не указано';
+            document.getElementById('lastName').textContent = user.last_name || 'Не указано';
+            document.getElementById('phone').textContent = profileData?.phone || 'Не указан';
+
+            // Заполняем редактируемые поля если есть данные профиля
+            if (profileData) {
+                document.getElementById('payment').value = profileData.payment_info || '';
+                document.getElementById('notes').value = profileData.notes || '';
+            }
+        }
+
         // --- ЛОГИКА СТРАНИЦЫ ---
         document.addEventListener('DOMContentLoaded', async () => {
             tg.ready();
@@ -100,7 +132,28 @@
                 }
             }
 
+            // Проверяем доступность Telegram WebApp
+            if (!tg) {
+                console.error('❌ Telegram WebApp не доступен');
+                // Временный fallback для тестирования
+                console.log('🔧 Используем тестовые данные для отладки');
+                const testUser = {
+                    id: 182719187,
+                    first_name: "Egor",
+                    last_name: "Nikitin", 
+                    username: "urso_barbudos"
+                };
+                showError('⚠️ Тестовый режим: данные загружены локально');
+                setTimeout(() => {
+                    populateUserData(testUser);
+                    showLoading(false);
+                }, 1000);
+                return;
+            }
+
             const user = tg.initDataUnsafe?.user;
+            console.log('👤 Telegram user data:', user);
+            
             if (user) {
                 // Обновляем заголовок с именем пользователя
                 const userName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Пользователь';

@@ -1,10 +1,15 @@
-# Cloudflare Pages headers для оптимизации
+# Cloudflare Pages headers для Telegram Web Apps
 
 /*
-  # Security headers
-  X-Frame-Options: DENY
+  # Allow Telegram Web App embedding
+  X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  
+  # CORS for Telegram
+  Access-Control-Allow-Origin: https://web.telegram.org
+  Access-Control-Allow-Methods: GET, POST, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, X-Telegram-Init-Data
   
   # Cache control for static assets
   Cache-Control: public, max-age=31536000, immutable
