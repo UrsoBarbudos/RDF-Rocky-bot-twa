@@ -1,0 +1,8 @@
+# Cloudflare Pages redirects
+
+# Root redirect to index
+/profile  /profile/profile.html  200
+/registration  /registration/registration.html  200
+
+# Error pages
+/404.html  /index.html  404
