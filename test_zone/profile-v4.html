@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Профиль пользователя - Dashboard</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .user-info {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .widget {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .error {
+            background: #ff4757;
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .info-value {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👤 Профиль пользователя</h1>
+            <p id="userName">Загрузка...</p>
+            <p id="userHandle">@loading...</p>
+        </div>
+
+        <div id="loading" class="loading">
+            🔄 Загрузка данных профиля...
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <div id="dashboard" style="display: none;">
+            <!-- Основная информация -->
+            <div class="widget">
+                <h3>📋 Основная информация</h3>
+                <div class="info-row">
+                    <span class="info-label">ID:</span>
+                    <span class="info-value" id="userId">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Имя:</span>
+                    <span class="info-value" id="firstName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Фамилия:</span>
+                    <span class="info-value" id="lastName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Username:</span>
+                    <span class="info-value" id="username">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Телефон:</span>
+                    <span class="info-value" id="phone">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Реквизиты:</span>
+                    <span class="info-value" id="paymentDisplay">-</span>
+                </div>
+            </div>
+
+            <!-- Редактируемые поля -->
+            <div class="widget">
+                <h3>💳 Платежные реквизиты</h3>
+                <div class="form-group">
+                    <label for="payment">Реквизиты для оплаты:</label>
+                    <textarea 
+                        id="payment" 
+                        rows="4" 
+                        placeholder="Укажите номер карты, банк и ФИО держателя карты"
+                    ></textarea>
+                </div>
+            </div>
+
+            <div class="widget">
+                <h3>📝 Дополнительная информация</h3>
+                <div class="form-group">
+                    <label for="notes">Заметки:</label>
+                    <textarea 
+                        id="notes" 
+                        rows="4" 
+                        placeholder="Дополнительная информация о предпочтениях, графике работы и т.д."
+                    ></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- НАСТРОЙКИ API ---
+        const API_URL = 'https://rocky-bot-api.egordkd.workers.dev';
+        
+        // --- ТЕСТОВЫЕ ДАННЫЕ ДЛЯ РАЗРАБОТКИ ---
+        const TEST_MODE = true; // Включить для тестирования без API
+        const TEST_DATA = {
+            success: true,
+            user: {
+                id: 123456789,
+                first_name: "Егор",
+                last_name: "Никитин",
+                username: "egordkd",
+                phone: "+7 (999) 123-45-67",
+                payment_info: "4111 1111 1111 1111\nСбербанк\nИван Иванович И.",
+                notes: "Предпочитаю работать в вечернее время.\nГотов к долгосрочному сотрудничеству."
+            }
+        };
+
+        // Мок Telegram WebApp для тестирования
+        const tg = window.Telegram?.WebApp || {
+            ready: () => {},
+            expand: () => {},
+            initData: 'test_data',
+            initDataUnsafe: {
+                user: {
+                    id: 123456789,
+                    first_name: "Егор",
+                    last_name: "Никитин",
+                    username: "egordkd"
+                }
+            },
+            MainButton: {
+                setText: (text) => console.log('MainButton text:', text),
+                show: () => console.log('MainButton shown'),
+                hide: () => console.log('MainButton hidden'),
+                showProgress: () => console.log('MainButton progress shown'),
+                hideProgress: () => console.log('MainButton progress hidden'),
+                onClick: (callback) => {
+                    // Создаем кнопку для тестирования
+                    if (!document.getElementById('testSaveButton')) {
+                        const button = document.createElement('button');
+                        button.id = 'testSaveButton';
+                        button.textContent = '💾 Сохранить изменения';
+                        button.style.cssText = `
+                            position: fixed;
+                            bottom: 20px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            background: #667eea;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 8px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            z-index: 1000;
+                            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+                        `;
+                        button.onclick = callback;
+                        document.body.appendChild(button);
+                    }
+                }
+            },
+            showAlert: (message, callback) => {
+                alert(message);
+                if (callback) callback();
+            },
+            close: () => console.log('WebApp closed')
+        };
+
+        // --- API ЛОГИКА ---
+        async function loadUserProfile(chatId) {
+            // В тестовом режиме возвращаем тестовые данные
+            if (TEST_MODE) {
+                return new Promise(resolve => {
+                    setTimeout(() => resolve(TEST_DATA), 500); // Имитация загрузки
+                });
+            }
+
+            const url = `${API_URL}/api/profile?chat_id=${chatId}`;
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Telegram-Init-Data': tg.initData,
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    
+                    // Если пользователь не зарегистрирован, перенаправляем на регистрацию
+                    if (response.status === 404 && errorData.redirect === 'registration') {
+                        window.location.href = '../registration/registration.html';
+                        return;
+                    }
+                    
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data || {};
+            } catch (error) {
+                console.error("Error loading user profile:", error);
+                throw error;
+            }
+        }
+
+        async function saveUserProfile(chatId, userData) {
+            // В тестовом режиме имитируем успешное сохранение
+            if (TEST_MODE) {
+                return new Promise(resolve => {
+                    setTimeout(() => resolve({ success: true, message: "Profile saved successfully" }), 1000);
+                });
+            }
+
+            const url = `${API_URL}/api/profile`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': tg.initData
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        payment_info: userData.payment_info,
+                        notes: userData.notes
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error("Error saving user profile:", error);
+                throw error;
+            }
+        }
+
+        // --- ЛОГИКА СТРАНИЦЫ ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            tg.ready();
+            tg.expand();
+
+            // Инициализация элементов после загрузки DOM
+            const dashboard = document.getElementById('dashboard');
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+
+            // UI функции
+            function showLoading(show) {
+                loadingEl.style.display = show ? 'flex' : 'none';
+                dashboard.style.display = show ? 'none' : 'block';
+            }
+
+            function showError(message) {
+                if (message) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = 'block';
+                } else {
+                    errorEl.style.display = 'none';
+                }
+            }
+
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById('userName').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Пользователь';
+                
+                // Правильно отображаем username
+                let displayUsername = user.username || 'Не указан';
+                if (displayUsername !== 'Не указан') {
+                    displayUsername = displayUsername.trim();
+                    if (!displayUsername.startsWith('@')) {
+                        displayUsername = '@' + displayUsername;
+                    }
+                }
+                document.getElementById('userHandle').textContent = displayUsername;
+                document.getElementById('userId').textContent = user.id;
+            }
+
+            tg.MainButton.setText('💾 Сохранить изменения');
+            tg.MainButton.show();
+
+            showLoading(true);
+            showError('');
+
+            try {
+                const userProfileData = await loadUserProfile(user.id);
+
+                if (userProfileData && userProfileData.success && userProfileData.user) {
+                    // Существующий пользователь с данными
+                    const userData = userProfileData.user;
+                    
+                    // Заполняем форму
+                    document.getElementById('payment').value = userData.payment_info || '';
+                    document.getElementById('notes').value = userData.notes || '';
+                    
+                    // Обновляем информацию в виджетах
+                    document.getElementById('firstName').textContent = userData.first_name || 'Не указано';
+                    document.getElementById('lastName').textContent = userData.last_name || 'Не указано';
+                    document.getElementById('phone').textContent = userData.phone || 'Не указан';
+                    
+                    // Исправляем отображение username
+                    let displayUsername = userData.username || 'Не указан';
+                    if (displayUsername !== 'Не указан') {
+                        displayUsername = displayUsername.trim();
+                        if (!displayUsername.startsWith('@')) {
+                            displayUsername = '@' + displayUsername;
+                        }
+                    }
+                    document.getElementById('username').textContent = displayUsername;
+                    
+                    // Отображаем реквизиты
+                    const paymentDisplay = userData.payment_info ? userData.payment_info.substring(0, 20) + '...' : 'Не указаны';
+                    document.getElementById('paymentDisplay').textContent = paymentDisplay;
+                }
+                showLoading(false);
+            } catch (error) {
+                console.error(error);
+                
+                const errorMessage = error.message || 'Не удалось загрузить данные профиля. Попробуйте позже.';
+                showError(errorMessage);
+                
+                loadingEl.style.display = 'none';
+                dashboard.style.display = 'none';
+                tg.MainButton.hide();
+            }
+        });
+
+        tg.MainButton.onClick(async () => {
+            const errorEl = document.getElementById('error');
+            
+            function showError(message) {
+                if (message) {
+                    errorEl.textContent = message;
+                    errorEl.style.display = 'block';
+                } else {
+                    errorEl.style.display = 'none';
+                }
+            }
+
+            tg.MainButton.showProgress();
+            showError('');
+
+            const userData = {
+                payment_info: document.getElementById('payment').value,
+                notes: document.getElementById('notes').value
+            };
+
+            try {
+                const result = await saveUserProfile(tg.initDataUnsafe.user.id, userData);
+                if (result && result.success) {
+                    tg.showAlert('✅ Профиль успешно сохранен!', () => {
+                        tg.close();
+                    });
+                } else {
+                    throw new Error(result.message || "Save operation failed");
+                }
+            } catch (error) {
+                console.error(error);
+                showError('Не удалось сохранить данные. Попробуйте снова.');
+            } finally {
+                tg.MainButton.hideProgress();
+            }
+        });
+    </script>
+</body>
+</html>

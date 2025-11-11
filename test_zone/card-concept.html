@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вызывной лист - Карточки</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            padding: 16px;
+            min-height: 100vh;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .hero-card {
+            background: rgba(255, 255, 255, 0.15);
+            text-align: center;
+            padding: 30px 20px;
+        }
+        
+        .date-time {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .location {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .route-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .route-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        
+        .team-member {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Главная карточка -->
+    <div class="card hero-card">
+        <div class="date-time">📅 15 ноября, 09:00</div>
+        <div class="location">📍 Студия "Creative Space"</div>
+        <button class="route-btn">🗺️ Построить маршрут</button>
+    </div>
+    
+    <!-- Детали съемки -->
+    <div class="card">
+        <div class="card-title">📋 Детали съемки</div>
+        <p>Рекламная съемка для бренда одежды. Локейшн - лофт с большими окнами.</p>
+    </div>
+    
+    <!-- Команда -->
+    <div class="card">
+        <div class="card-title">👥 Команда (4 человека)</div>
+        <div class="team-grid">
+            <div class="team-member">👨‍💼 Егор<br>Продюсер</div>
+            <div class="team-member">📷 Анна<br>Фотограф</div>
+            <div class="team-member">💡 Максим<br>Световик</div>
+            <div class="team-member">🎬 Ольга<br>Режиссер</div>
+        </div>
+    </div>
+    
+    <!-- Контакты -->
+    <div class="card">
+        <div class="card-title">📞 Контакты</div>
+        <p>📱 Студия: +7 (495) 123-45-67<br>
+           👨‍💼 Егор: +7 (999) 876-54-32</p>
+    </div>
+    
+    <!-- Статус -->
+    <div class="card">
+        <div class="card-title">⚡ Статус: Подтверждено</div>
+        <p style="color: #4CAF50;">✅ Все участники подтвердили участие</p>
+    </div>
+</body>
+</html>

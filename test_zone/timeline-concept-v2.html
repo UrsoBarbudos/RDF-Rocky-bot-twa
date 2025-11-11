@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вызывной лист - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-areas: 
+                "hero hero"
+                "details team"
+                "contacts status";
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .hero {
+            grid-area: hero;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        
+        .date-time {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+        
+        .location {
+            font-size: 20px;
+            margin-bottom: 24px;
+            opacity: 0.9;
+        }
+        
+        .route-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 16px 32px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .route-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .widget {
+            background: #2d2d2d;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #404040;
+        }
+        
+        .details { grid-area: details; }
+        .team { grid-area: team; }
+        .contacts { grid-area: contacts; }
+        .status { grid-area: status; }
+        
+        .widget-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .team-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .team-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            background: #3d3d3d;
+            border-radius: 8px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .contact-item {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: #3d3d3d;
+            border-radius: 6px;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-areas: 
+                    "hero"
+                    "details"
+                    "team"
+                    "contacts"
+                    "status";
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="hero">
+            <div class="date-time">📅 15 ноября, 09:00</div>
+            <div class="location">📍 Студия "Creative Space"</div>
+            <button class="route-btn">🗺️ Построить маршрут</button>
+        </div>
+        
+        <div class="widget details">
+            <div class="widget-title">📋 Детали съемки</div>
+            <p>Рекламная съемка для бренда одежды. Локейшн - лофт с большими окнами.</p>
+        </div>
+        
+        <div class="widget team">
+            <div class="widget-title">👥 Команда (4)</div>
+            <div class="team-compact">
+                <div class="team-item">👨‍💼 Егор</div>
+                <div class="team-item">📷 Анна</div>
+                <div class="team-item">💡 Максим</div>
+                <div class="team-item">🎬 Ольга</div>
+            </div>
+        </div>
+        
+        <div class="widget contacts">
+            <div class="widget-title">📞 Контакты</div>
+            <div class="contact-item">📱 Студия<br>+7 (495) 123-45-67</div>
+            <div class="contact-item">👨‍💼 Егор<br>+7 (999) 876-54-32</div>
+        </div>
+        
+        <div class="widget status">
+            <div class="widget-title">⚡ Статус</div>
+            <div style="display: flex; align-items: center;">
+                <div class="status-indicator"></div>
+                <span style="color: #4CAF50; font-weight: bold;">Подтверждено</span>
+            </div>
+            <p style="margin-top: 8px; font-size: 14px; opacity: 0.8;">Все участники готовы</p>
+        </div>
+    </div>
+</body>
+</html>
