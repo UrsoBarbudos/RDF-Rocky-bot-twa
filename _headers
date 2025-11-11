@@ -1,5 +1,15 @@
 # Cloudflare Pages headers для Telegram Web Apps
 
+# Отключаем автоматические чистые URL для profile.html
+/profile/profile.html
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, POST, OPTIONS
+  Access-Control-Allow-Headers: *
+  Cache-Control: no-cache, no-store, must-revalidate
+
 /*
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff

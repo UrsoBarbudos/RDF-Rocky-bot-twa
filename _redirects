@@ -1,8 +1,6 @@
-# Cloudflare Pages redirects
-
 # Rocky Bot Web App Redirects
 
-# Отключаем автоматические "чистые URL" для profile.html (приоритет с !)
+# Прямой доступ к profile.html без редиректа
 /profile/profile.html  /profile/profile.html  200!
 
 # Главная страница
