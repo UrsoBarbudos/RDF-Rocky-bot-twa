@@ -1,6 +1,0 @@
-# Конфигурация для Cloudflare Pages
-name = "rdf-rocky-bot-twa"
-compatibility_date = "2023-11-11"
-
-# Для Pages проекта достаточно базовой конфигурации
-pages_build_output_dir = "."
