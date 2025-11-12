@@ -1,0 +1,32 @@
+{
+  "functions": {
+    "api/profile.js": {
+      "maxDuration": 30
+    },
+    "api/register.js": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, X-Telegram-Init-Data" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/profile",
+      "destination": "/api/profile"
+    },
+    {
+      "source": "/register", 
+      "destination": "/api/register"
+    }
+  ]
+}
