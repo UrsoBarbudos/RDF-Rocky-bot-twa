@@ -218,10 +218,7 @@
             document.getElementById('userSummary').innerHTML = `${userName}<br>${displayUsername}`;
             
             // Заполняем поля информации
-            document.getElementById('userId').textContent = user.id;
             document.getElementById('username').textContent = displayUsername;
-            document.getElementById('firstName').textContent = user.first_name || 'Не указано';
-            document.getElementById('lastName').textContent = user.last_name || 'Не указано';
             document.getElementById('phone').textContent = profileData?.phone || 'Не указан';
 
             // Заполняем редактируемые поля если есть данные профиля
@@ -328,10 +325,7 @@
                 document.getElementById('userSummary').innerHTML = `${userName}<br>${displayUsername}`;
                 
                 // Заполняем поля информации
-                document.getElementById('userId').textContent = user.id;
                 document.getElementById('username').textContent = displayUsername;
-                document.getElementById('firstName').textContent = user.first_name || 'Не указано';
-                document.getElementById('lastName').textContent = user.last_name || 'Не указано';
                 document.getElementById('phone').textContent = 'Не указан';
             }
 
@@ -356,7 +350,7 @@
                     document.getElementById('notes').value = userData.notes || '';
                     
                     // Обновляем отображение пользователя
-                    document.getElementById('userId').textContent = userData.chat_id;
+                    // ID больше не отображается для пользователя
                     
                     // Исправляем отображение username - убираем двойные @@ и лишние пробелы
                     let displayUsername = userData.username || 'Не указан';
@@ -595,19 +589,7 @@
         <form id="profileForm" style="display: none;">
             <!-- Основная информация -->
             <div class="widget">
-                <h3>📋 Основная информация</h3>
-                <div class="info-row">
-                    <span class="info-label">ID:</span>
-                    <span class="info-value" id="userId">-</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Имя:</span>
-                    <span class="info-value" id="firstName">-</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Фамилия:</span>
-                    <span class="info-value" id="lastName">-</span>
-                </div>
+                <h3>� Основная информация</h3>
                 <div class="info-row">
                     <span class="info-label">Username:</span>
                     <span class="info-value" id="username">-</span>
