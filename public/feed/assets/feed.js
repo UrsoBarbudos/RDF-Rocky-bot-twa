@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Для локального тестирования
             if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
                  console.warn("Telegram user data not found. Falling back to test data.");
-                 chatId = '123456789'; // ID для теста
-                 await loadUserInfo('testuser');
+                chatId = '123456789'; // ID для теста
+                await loadUserInfo('testuser');
             } else {
                 chatId = tg.initDataUnsafe.user.id;
                 await loadUserInfo(tg.initDataUnsafe.user.username);
