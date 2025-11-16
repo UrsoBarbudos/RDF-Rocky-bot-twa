@@ -80,49 +80,50 @@ function normalizeUsername(username) {
   return normalized;
 }
 
-// Главная функция Vercel API
-export default async function handler(req, res) {
-  // CORS заголовки
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Telegram-Init-Data');
+// Главная функция Netlify API
+exports.handler = async (event, context) => {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Telegram-Init-Data'
+  };
 
-  // Обработка preflight запросов
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers
+    };
   }
 
-  // Только POST метод поддерживается
-  if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      error: 'Method Not Allowed', 
-      message: 'Только POST метод поддерживается для регистрации' 
-    });
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method Not Allowed', message: 'Только POST метод поддерживается для регистрации' })
+    };
   }
 
-  // Проверка переменных окружения
   if (!process.env.AIRTABLE_TOKEN) {
-    return res.status(500).json({ 
-      error: 'Configuration Error', 
-      message: 'AIRTABLE_TOKEN не настроен' 
-    });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Configuration Error', message: 'AIRTABLE_TOKEN не настроен' })
+    };
   }
 
-  // Инициализация Airtable API
   const airtable = new AirtableAPI(process.env.AIRTABLE_TOKEN);
 
   try {
-    const { chat_id, username, first_name, last_name } = req.body;
+    const { chat_id, username, first_name, last_name } = JSON.parse(event.body || '{}');
 
-    // Валидация обязательных полей
     if (!chat_id || !username) {
-      return res.status(400).json({ 
-        error: 'Bad Request', 
-        message: 'Поля chat_id и username обязательны' 
-      });
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Bad Request', message: 'Поля chat_id и username обязательны' })
+      };
     }
 
-    // Проверка, существует ли уже пользователь
     const existingUser = await airtable.list(USERS_TABLE, {
       filterByFormula: `{chat_id} = ${chat_id}`,
       fields: ['chat_id', 'Статус доступа'],
@@ -137,14 +138,17 @@ export default async function handler(req, res) {
         'Pending': 'Ваша заявка уже подана и ожидает одобрения.'
       };
 
-      return res.status(409).json({ 
-        error: 'User Already Exists',
-        message: messages[status] || 'Пользователь уже существует',
-        status: status
-      });
+      return {
+        statusCode: 409,
+        headers,
+        body: JSON.stringify({
+          error: 'User Already Exists',
+          message: messages[status] || 'Пользователь уже существует',
+          status: status
+        })
+      };
     }
 
-    // Создание новой заявки на регистрацию
     const normalizedUsername = normalizeUsername(username);
     
     const newUserFields = {
@@ -158,7 +162,6 @@ export default async function handler(req, res) {
 
     const newUser = await airtable.create(USERS_TABLE, newUserFields);
 
-    // Отправка уведомления в n8n (если настроен webhook)
     if (process.env.N8N_WEBHOOK_URL) {
       try {
         await fetch(process.env.N8N_WEBHOOK_URL, {
@@ -179,21 +182,28 @@ export default async function handler(req, res) {
         console.log('N8N notification sent successfully');
       } catch (error) {
         console.error('Failed to notify n8n:', error);
-        // Не останавливаем выполнение, если уведомление не удалось
       }
     }
 
-    return res.status(201).json({ 
-      success: true,
-      message: 'Заявка успешно отправлена! Ожидайте одобрения администратора.',
-      record_id: newUser.id
-    });
+    return {
+      statusCode: 201,
+      headers,
+      body: JSON.stringify({
+        success: true,
+        message: 'Заявка успешно отправлена! Ожидайте одобрения администратора.',
+        record_id: newUser.id
+      })
+    };
 
   } catch (error) {
     console.error('Registration API error:', error);
-    return res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Внутренняя ошибка сервера'
-    });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        error: 'Internal Server Error',
+        message: 'Внутренняя ошибка сервера'
+      })
+    };
   }
-}
+};

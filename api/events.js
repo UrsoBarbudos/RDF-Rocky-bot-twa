@@ -125,19 +125,27 @@ async function checkUserAccess(chatId, airtable) {
   }
 }
 
-// Главная функция Vercel API
-export default async function handler(req, res) {
-  // CORS заголовки
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Разрешаем все источники для простоты, в проде лучше 'https://web.telegram.org'
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+// Главная функция Netlify API
+exports.handler = async (event, context) => {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+  };
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers
+    };
   }
 
   if (!process.env.AIRTABLE_TOKEN) {
-    return res.status(500).json({ error: 'Configuration Error', message: 'AIRTABLE_TOKEN не настроен' });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Configuration Error', message: 'AIRTABLE_TOKEN не настроен' })
+    };
   }
 
   const airtable = new AirtableAPI(process.env.AIRTABLE_TOKEN);
@@ -146,56 +154,96 @@ export default async function handler(req, res) {
     // ============================================
     // 📦 GET /api/events - Получение ленты событий
     // ============================================
-    if (req.method === 'GET') {
-      const { chat_id } = req.query;
+    if (event.httpMethod === 'GET') {
+      const { chat_id } = event.queryStringParameters;
       if (!chat_id) {
-        return res.status(400).json({ error: 'Bad Request', message: 'Параметр chat_id обязателен' });
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Bad Request', message: 'Параметр chat_id обязателен' })
+        };
       }
 
       const accessCheck = await checkUserAccess(chat_id, airtable);
       if (!accessCheck.approved) {
-        return res.status(403).json({ error: 'Access Denied', reason: accessCheck.reason, message: accessCheck.message });
+        return {
+          statusCode: 403,
+          headers,
+          body: JSON.stringify({ error: 'Access Denied', reason: accessCheck.reason, message: accessCheck.message })
+        };
       }
 
       const events = await airtable.getUserEvents(accessCheck.user.id);
-      return res.status(200).json({ success: true, data: events.records });
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, data: events.records })
+      };
     }
 
     // ============================================
     // ➕ POST /api/events - Создание нового события
     // ============================================
-    else if (req.method === 'POST') {
-      const { chat_id, eventType, amount, description } = req.body;
+    else if (event.httpMethod === 'POST') {
+      const { chat_id, eventType, amount, description } = JSON.parse(event.body || '{}');
        if (!chat_id) {
-        return res.status(400).json({ error: 'Bad Request', message: 'Параметр chat_id обязателен' });
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Bad Request', message: 'Параметр chat_id обязателен' })
+        };
       }
 
       const accessCheck = await checkUserAccess(chat_id, airtable);
       if (!accessCheck.approved) {
-        return res.status(403).json({ error: 'Access Denied', reason: accessCheck.reason, message: accessCheck.message });
+        return {
+          statusCode: 403,
+          headers,
+          body: JSON.stringify({ error: 'Access Denied', reason: accessCheck.reason, message: accessCheck.message })
+        };
       }
 
       if (!eventType || !['Вызывной', 'Расход'].includes(eventType)) {
-        return res.status(400).json({ error: 'Bad Request', message: 'Некорректный или отсутствующий eventType' });
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Bad Request', message: 'Некорректный или отсутствующий eventType' })
+        };
       }
 
       if (eventType === 'Расход' && (typeof amount !== 'number' || amount <= 0)) {
-         return res.status(400).json({ error: 'Bad Request', message: 'Для расхода необходимо указать корректную сумму (amount)' });
+         return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Bad Request', message: 'Для расхода необходимо указать корректную сумму (amount)' })
+        };
       }
       
       const eventData = { amount, description };
       const newEvent = await airtable.createEvent(accessCheck.user.id, eventType, eventData);
 
-      return res.status(201).json({ success: true, message: 'Событие успешно создано', data: newEvent });
+      return {
+        statusCode: 201,
+        headers,
+        body: JSON.stringify({ success: true, message: 'Событие успешно создано', data: newEvent })
+      };
     }
 
     // Неподдерживаемый метод
     else {
-      return res.status(405).json({ error: 'Method Not Allowed', message: `Метод ${req.method} не поддерживается` });
+      return {
+        statusCode: 405,
+        headers,
+        body: JSON.stringify({ error: 'Method Not Allowed', message: `Метод ${event.httpMethod} не поддерживается` })
+      };
     }
 
   } catch (error) {
     console.error('Events API error:', error);
-    return res.status(500).json({ error: 'Internal Server Error', message: 'Внутренняя ошибка сервера' });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Internal Server Error', message: 'Внутренняя ошибка сервера' })
+    };
   }
-}
+};

@@ -124,30 +124,33 @@ async function checkUserAccess(chatId, airtable) {
   }
 }
 
-// Главная функция Vercel API
-export default async function handler(req, res) {
-  // ===========================================
-  // ДИАГНОСТИКА: Логирование User-Agent
-  const userAgent = req.headers['user-agent'] || 'N/A';
-  console.log(`[DIAGNOSTICS] Request received. User-Agent: "${userAgent}"`);
-  // ===========================================
-
-  // CORS заголовки
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Telegram-Init-Data');
+// Главная функция Netlify API
+exports.handler = async (event, context) => {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Telegram-Init-Data'
+  };
 
   // Обработка preflight запросов
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers
+    };
   }
+
+  // ДИАГНОСТИКА: Логирование User-Agent
+  const userAgent = event.headers['user-agent'] || 'N/A';
+  console.log(`[DIAGNOSTICS] Request received. User-Agent: "${userAgent}"`);
 
   // Проверка переменных окружения
   if (!process.env.AIRTABLE_TOKEN) {
-    return res.status(500).json({ 
-      error: 'Configuration Error', 
-      message: 'AIRTABLE_TOKEN не настроен' 
-    });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Configuration Error', message: 'AIRTABLE_TOKEN не настроен' })
+    };
   }
 
   // Инициализация Airtable API
@@ -157,25 +160,26 @@ export default async function handler(req, res) {
     // ============================================
     // 📊 GET /api/profile - Получение профиля пользователя
     // ============================================
-    if (req.method === 'GET') {
-      const { chat_id } = req.query;
+    if (event.httpMethod === 'GET') {
+      const { chat_id } = event.queryStringParameters;
       
       if (!chat_id) {
-        return res.status(400).json({ 
-          error: 'Bad Request', 
-          message: 'Параметр chat_id обязателен' 
-        });
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Bad Request', message: 'Параметр chat_id обязателен' })
+        };
       }
 
       // Проверка доступа
       const accessCheck = await checkUserAccess(chat_id, airtable);
       
       if (!accessCheck.approved) {
-        return res.status(403).json({
-          error: 'Access Denied',
-          reason: accessCheck.reason,
-          message: accessCheck.message
-        });
+        return {
+          statusCode: 403,
+          headers,
+          body: JSON.stringify({ error: 'Access Denied', reason: accessCheck.reason, message: accessCheck.message })
+        };
       }
 
       // Получение полных данных пользователя
@@ -200,35 +204,37 @@ export default async function handler(req, res) {
         role: fields.Role || 'USER'
       };
 
-      return res.status(200).json({
-        success: true,
-        data: profileData
-      });
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, data: profileData })
+      };
     }
 
     // ============================================
     // 💾 POST /api/profile - Обновление профиля пользователя
     // ============================================
-    else if (req.method === 'POST') {
-      const data = req.body;
+    else if (event.httpMethod === 'POST') {
+      const data = JSON.parse(event.body || '{}');
       const chatId = data.chat_id;
 
       if (!chatId) {
-        return res.status(400).json({ 
-          error: 'Bad Request', 
-          message: 'Поле chat_id обязательно' 
-        });
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Bad Request', message: 'Поле chat_id обязательно' })
+        };
       }
 
       // Проверка доступа
       const accessCheck = await checkUserAccess(chatId, airtable);
       
       if (!accessCheck.approved) {
-        return res.status(403).json({
-          error: 'Access Denied',
-          reason: accessCheck.reason,
-          message: accessCheck.message
-        });
+        return {
+          statusCode: 403,
+          headers,
+          body: JSON.stringify({ error: 'Access Denied', reason: accessCheck.reason, message: accessCheck.message })
+        };
       }
 
       // Подготовка данных для обновления
@@ -245,25 +251,28 @@ export default async function handler(req, res) {
       const recordId = accessCheck.user.id;
       await airtable.update(USERS_TABLE, recordId, updateFields);
 
-      return res.status(200).json({
-        success: true,
-        message: 'Профиль успешно обновлен'
-      });
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, message: 'Профиль успешно обновлен' })
+      };
     }
 
     // Неподдерживаемый метод
     else {
-      return res.status(405).json({ 
-        error: 'Method Not Allowed', 
-        message: `Метод ${req.method} не поддерживается` 
-      });
+      return {
+        statusCode: 405,
+        headers,
+        body: JSON.stringify({ error: 'Method Not Allowed', message: `Метод ${event.httpMethod} не поддерживается` })
+      };
     }
 
   } catch (error) {
     console.error('Profile API error:', error);
-    return res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Внутренняя ошибка сервера'
-    });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Internal Server Error', message: 'Внутренняя ошибка сервера' })
+    };
   }
-}
+};
