@@ -126,6 +126,12 @@ async function checkUserAccess(chatId, airtable) {
 
 // Главная функция Vercel API
 export default async function handler(req, res) {
+  // ===========================================
+  // ДИАГНОСТИКА: Логирование User-Agent
+  const userAgent = req.headers['user-agent'] || 'N/A';
+  console.log(`[DIAGNOSTICS] Request received. User-Agent: "${userAgent}"`);
+  // ===========================================
+
   // CORS заголовки
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
