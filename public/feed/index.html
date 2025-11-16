@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лента событий</title>
+    <link rel="stylesheet" href="assets/feed.css">
+</head>
+<body>
+    <header>
+        <h1 id="username-display">Загрузка...</h1>
+    </header>
+    <main>
+        <div class="actions">
+            <button id="add-call-btn">📞 Добавить вызывной</button>
+            <button id="add-expense-btn">💰 Добавить расход</button>
+        </div>
+        <div id="event-feed" class="feed-container">
+            <!-- Карточки событий будут здесь -->
+        </div>
+    </main>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="assets/feed.js"></script>
+</body>
+</html>

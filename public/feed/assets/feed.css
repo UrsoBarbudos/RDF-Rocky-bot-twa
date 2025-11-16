@@ -1,0 +1,111 @@
+:root {
+    --primary-bg-color: #E3E3E3;
+    --card-bg-color: rgba(255, 255, 255, 0.95);
+    --call-accent-color: #2ed573;
+    --expense-accent-color: #ff4757;
+    --text-color: #333;
+    --border-radius: 12px;
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--primary-bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 15px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#username-display {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin: 0;
+}
+
+.actions {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.actions button {
+    font-size: 16px;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    min-width: 44px; /* Touch-friendly size */
+    min-height: 44px; /* Touch-friendly size */
+    transition: transform 0.1s ease;
+}
+
+.actions button:active {
+    transform: scale(0.97);
+}
+
+#add-call-btn {
+    background-color: var(--call-accent-color);
+    color: white;
+}
+
+#add-expense-btn {
+    background-color: var(--expense-accent-color);
+    color: white;
+}
+
+.feed-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.event-card {
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-left: 5px solid;
+}
+
+.event-card.call {
+    border-left-color: var(--call-accent-color);
+}
+
+.event-card.expense {
+    border-left-color: var(--expense-accent-color);
+}
+
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.event-icon {
+    font-size: 1.4em;
+}
+
+.event-time {
+    font-size: 0.9em;
+    color: #777;
+}
+
+.event-content h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+}
+
+.expense-description {
+    margin: 0;
+    font-size: 0.95em;
+    color: #555;
+}
