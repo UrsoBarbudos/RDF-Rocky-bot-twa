@@ -21,6 +21,10 @@
   ],
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/public/feed/index.html"
+    },
+    {
       "source": "/profile",
       "destination": "/api/profile"
     },
