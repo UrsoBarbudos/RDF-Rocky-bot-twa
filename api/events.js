@@ -99,8 +99,9 @@ class AirtableAPI {
 // Проверка доступа пользователя (скопирована из profile.js)
 async function checkUserAccess(chatId, airtable) {
   try {
+    const chatIdNum = typeof chatId === 'string' ? parseInt(chatId, 10) : chatId;
     const result = await airtable.list(USERS_TABLE, {
-      filterByFormula: `{chat_id} = ${chatId}`,
+      filterByFormula: `{chat_id} = ${chatIdNum}`,
       fields: ['chat_id', 'Статус доступа'],
       maxRecords: 1
     });
